@@ -1,3 +1,7 @@
+## Pull requests
+
+- PR のタイトルと本文は日本語で記述する。
+
 <!--VITE PLUS START-->
 
 # Using Vite+, the Unified Toolchain for the Web
