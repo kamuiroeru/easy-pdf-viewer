@@ -1,9 +1,15 @@
+import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig, lazyPlugins } from "vite-plus";
 
 // https://vite.dev/config/
 export default defineConfig({
   root: "src/client",
+  test: {
+    root: fileURLToPath(new URL(".", import.meta.url)),
+    environment: "node",
+    include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
+  },
   build: {
     outDir: "../../dist/client",
     emptyOutDir: true,
