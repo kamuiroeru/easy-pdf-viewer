@@ -2,18 +2,18 @@ import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig, lazyPlugins } from "vite-plus";
 
+const devProxy = {
+  "^/api(?:/|\\?|$)": "http://127.0.0.1:3000",
+} as const;
+
 // https://vite.dev/config/
 export default defineConfig({
   root: "src/client",
   server: {
-    proxy: {
-      "^/api(?:/|\\?|$)": "http://127.0.0.1:3000",
-    },
+    proxy: devProxy,
   },
   preview: {
-    proxy: {
-      "^/api(?:/|\\?|$)": "http://127.0.0.1:3000",
-    },
+    proxy: devProxy,
   },
   test: {
     root: fileURLToPath(new URL(".", import.meta.url)),
