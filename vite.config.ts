@@ -7,8 +7,23 @@ export default defineConfig({
   root: "src/client",
   test: {
     root: fileURLToPath(new URL(".", import.meta.url)),
-    environment: "node",
-    include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
+    projects: [
+      {
+        test: {
+          name: "unit",
+          environment: "node",
+          include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
+        },
+      },
+      {
+        test: {
+          name: "component",
+          environment: "jsdom",
+          include: ["src/**/*.test.tsx"],
+          setupFiles: ["./tests/setup-component.ts"],
+        },
+      },
+    ],
   },
   build: {
     outDir: "../../dist/client",

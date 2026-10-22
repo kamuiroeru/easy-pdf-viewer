@@ -16,3 +16,13 @@ Vite+ 同梱の Vitest を使用します。API は `vite-plus/test` から明�
 pure TS の UT は Node 環境で実行します。`src/**/*.test.ts` に対象コードと並べるか、
 `tests/**/*.test.ts` に配置してください。`tests/unit/typescript.test.ts` は実行環境のスモークテストです。
 CI でも `vp test` を実行し、テストが見つからない場合は失敗します。
+
+React Component Test は `src/**/*.test.tsx` に配置し、jsdom + React Testing Library で実行します。
+`userEvent.setup()` で操作を作成し、クリックなどは `await` してください。
+`tests/setup-component.ts` で各テスト後に DOM を cleanup します。
+`src/client/App.test.tsx` が表示・クリックの例です。
+
+- `vp test --project unit`: pure TS の UT のみ（Node 環境）
+- `vp test --project component`: Component Test のみ（jsdom 環境）
+
+`vp test` は両方を実行します。jsdom では実ブラウザーのレイアウトや描画は検証できません。
