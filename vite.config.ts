@@ -3,6 +3,11 @@ import { defineConfig, lazyPlugins } from "vite-plus";
 
 // https://vite.dev/config/
 export default defineConfig({
+  root: "src/client",
+  build: {
+    outDir: "../../dist/client",
+    emptyOutDir: true,
+  },
   fmt: {},
   lint: {
     plugins: ["react", "typescript", "oxc"],
