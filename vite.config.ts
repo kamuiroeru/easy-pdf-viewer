@@ -5,6 +5,16 @@ import { defineConfig, lazyPlugins } from "vite-plus";
 // https://vite.dev/config/
 export default defineConfig({
   root: "src/client",
+  server: {
+    proxy: {
+      "/api": "http://127.0.0.1:3000",
+    },
+  },
+  preview: {
+    proxy: {
+      "/api": "http://127.0.0.1:3000",
+    },
+  },
   test: {
     root: fileURLToPath(new URL(".", import.meta.url)),
     projects: [
