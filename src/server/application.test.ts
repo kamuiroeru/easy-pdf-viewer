@@ -34,6 +34,35 @@ describe("client and API hosting", () => {
     expect(await response.text()).toBe("console.log('client');");
   });
 
+  it.each(["/some-route", "/folders/nested/?sort=name"])(
+    "serves the client HTML for direct navigation to %s",
+    async (path) => {
+      const response = await createServerApp("prod", clientRoot).request(path);
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toContain("text/html");
+      expect(await response.text()).toContain("<h1>PDF Viewer</h1>");
+    },
+  );
+
+  it("supports HEAD requests to client routes", async () => {
+    const response = await createServerApp("prod", clientRoot).request("/some-route", {
+      method: "HEAD",
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/html");
+    expect(await response.text()).toBe("");
+  });
+
+  it("does not serve client HTML for POST requests", async () => {
+    const response = await createServerApp("prod", clientRoot).request("/some-route", {
+      method: "POST",
+    });
+
+    expect(response.status).toBe(404);
+  });
+
   it("serves the API alongside the client", async () => {
     const response = await createServerApp("prod", clientRoot).request("/api/hello");
 
@@ -45,7 +74,12 @@ describe("client and API hosting", () => {
     const website = createServerApp("prod", clientRoot);
 
     expect((await website.request("/api/unknown")).status).toBe(404);
+    expect((await website.request("/api")).status).toBe(404);
     expect((await website.request("/assets/missing.js")).status).toBe(404);
+    expect((await website.request("/assets/missing")).status).toBe(404);
+    expect((await website.request("/assets")).status).toBe(404);
+    expect((await website.request("/favicon.ico")).status).toBe(404);
+    expect((await website.request("/missing.js/")).status).toBe(404);
   });
 
   it("serves only the API in dev", async () => {
