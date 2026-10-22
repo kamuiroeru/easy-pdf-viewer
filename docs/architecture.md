@@ -17,12 +17,19 @@
 docs/
 src/
   client/
+    public/
+    assets/
     components/
     routes/
+    index.html
+    main.tsx
+    tsconfig.json
   server/
     routes/
     services/
+    tsconfig.json
   shared/
+    tsconfig.json
 vite.config.ts
 tsconfig.json
 package.json
@@ -37,6 +44,8 @@ compose.yaml
 | `src/shared`          | クライアントとサーバーで共有する型・スキーマ           |
 
 クライアントからサーバーの実装を直接 import しない。Hono RPC 用の型を参照する場合は `import type` を使い、サーバーの実装をブラウザのバンドルに含めない。
+
+Vite のルートは `src/client` とし、加工せず配信する静的ファイルは `src/client/public`、import して使用する画像などは `src/client/assets` に置く。フロントエンドのビルド出力は `dist/client` に配置する。閲覧対象の PDF・画像・動画は `public` に置かず、サーバーから配信する。
 
 ## 開発・本番の起動方針
 
