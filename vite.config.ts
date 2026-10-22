@@ -7,12 +7,12 @@ export default defineConfig({
   root: "src/client",
   server: {
     proxy: {
-      "/api": "http://127.0.0.1:3000",
+      "^/api(?:/|\\?|$)": "http://127.0.0.1:3000",
     },
   },
   preview: {
     proxy: {
-      "/api": "http://127.0.0.1:3000",
+      "^/api(?:/|\\?|$)": "http://127.0.0.1:3000",
     },
   },
   test: {
