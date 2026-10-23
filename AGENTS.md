@@ -1,11 +1,11 @@
 ## Pull requests
 
-- PR のタイトルと本文は日本語で記述する。
+- Write PR titles and descriptions in Japanese.
 
-## 共通コーディングルール
+## Shared coding rules
 
-- `.ts`・`.tsx` ファイルを作成・編集する前に、[TypeScript の import ルール](.claude/rules/typescript-imports.md)を読み、その指示に従う。
-- `docs/` 配下のドキュメントを追加・修正する前に、[ドキュメントの執筆ルール](.claude/rules/docs-writing.md)を読み、その指示に従う。
+- Before creating or editing `.ts` or `.tsx` files, read and follow the [TypeScript import rules](.claude/rules/typescript-imports.md).
+- Before adding or editing documents under `docs/`, read and follow the [documentation writing rules](.claude/rules/docs-writing.md).
 
 <!--VITE PLUS START-->
 
