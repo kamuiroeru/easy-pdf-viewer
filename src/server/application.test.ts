@@ -1,8 +1,8 @@
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterAll, beforeAll, describe, expect, it, vi } from "vite-plus/test";
-import { createServerApp } from "./application.ts";
+import { afterAll, beforeAll, describe, expect, it } from "vite-plus/test";
+import { createServerApp } from "@be/application.ts";
 
 describe("client and API hosting", () => {
   let clientRoot: string;
@@ -88,17 +88,5 @@ describe("client and API hosting", () => {
     expect((await server.request("/")).status).toBe(404);
     expect((await server.request("/assets/app.js")).status).toBe(404);
     expect((await server.request("/api/hello")).status).toBe(200);
-  });
-
-  it.each([undefined, "dev", "invalid", ""])("treats APP_ENV=%s as dev", async (value) => {
-    vi.stubEnv("APP_ENV", value);
-    try {
-      const server = createServerApp();
-
-      expect((await server.request("/")).status).toBe(404);
-      expect((await server.request("/api/hello")).status).toBe(200);
-    } finally {
-      vi.unstubAllEnvs();
-    }
   });
 });

@@ -2,9 +2,10 @@ import { fileURLToPath } from "node:url";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 import { app } from "@be/app.ts";
+import { env } from "@be/env.ts";
 
 export function createServerApp(
-  appEnv = process.env.APP_ENV ?? "dev",
+  appEnv = env.APP_ENV,
   clientRoot = fileURLToPath(new URL("../../dist/client/", import.meta.url)),
 ) {
   if (appEnv !== "prod") {
