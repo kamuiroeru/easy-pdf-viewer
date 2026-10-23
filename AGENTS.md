@@ -5,6 +5,7 @@
 ## 共通コーディングルール
 
 - `.ts`・`.tsx` ファイルを作成・編集する前に、[TypeScript の import ルール](.claude/rules/typescript-imports.md)を読み、その指示に従う。
+- `docs/` 配下のドキュメントを追加・修正する前に、[ドキュメントの執筆ルール](.claude/rules/docs-writing.md)を読み、その指示に従う。
 
 <!--VITE PLUS START-->
 
