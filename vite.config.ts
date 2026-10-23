@@ -6,9 +6,18 @@ const devProxy = {
   "^/api(?:/|\\?|$)": "http://127.0.0.1:3000",
 } as const;
 
+const resolve = {
+  alias: {
+    "@fe": fileURLToPath(new URL("./src/client", import.meta.url)),
+    "@be": fileURLToPath(new URL("./src/server", import.meta.url)),
+    "@s": fileURLToPath(new URL("./src/shared", import.meta.url)),
+  },
+};
+
 // https://vite.dev/config/
 export default defineConfig({
   root: "src/client",
+  resolve,
   server: {
     proxy: devProxy,
   },
@@ -19,6 +28,7 @@ export default defineConfig({
     root: fileURLToPath(new URL(".", import.meta.url)),
     projects: [
       {
+        resolve,
         test: {
           name: "unit",
           environment: "node",
@@ -26,6 +36,7 @@ export default defineConfig({
         },
       },
       {
+        resolve,
         test: {
           name: "component",
           environment: "jsdom",

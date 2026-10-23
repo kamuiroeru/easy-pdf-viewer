@@ -1,8 +1,6 @@
 import { Hono } from "hono";
-import { sleepMs } from "../shared/debugUtil.ts";
 
-export const app = new Hono().get("/api/hello", async (c) => {
-  await sleepMs(1000);
+export const app = new Hono().get("/api/hello", (c) => {
   return c.json({ message: "Hello from Hono!" }, 200);
 });
 

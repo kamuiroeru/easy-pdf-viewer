@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@fe/*": ["./src/client/*"],
+      "@be/*": ["./src/server/*"],
+      "@s/*": ["./src/shared/*"]
+    }
+  }
+}
