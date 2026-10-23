@@ -4,6 +4,39 @@
 
 設計と要件は [docs](docs/README.md) に記録します。
 
+## 開発
+
+`vp install` のあと、`vp run dev` でクライアントと API を同時に起動します。
+`concurrently` を使い、Ctrl+C または片方の終了時には両方を停止します。
+Vite が表示する URL（通常 `http://localhost:5173`）を開いてください。
+個別に起動することもできます。
+
+- `vp run dev:server`: Hono API を `http://127.0.0.1:3000` で起動（変更時に再起動）
+- `vp run dev:client`: Vite のクライアントを起動
+
+`GET /api/hello` は `{ "message": "Hello from Hono!" }` を返します。
+クライアントは `useEffect` から Hono RPC (`hono/client`) で取得し、画面に表示します。
+Vite の dev / preview は `/api` を API サーバーへプロキシします。
+`vp run build` のあと、`vp run start` で Hono から `dist/client` と API を配信します。
+`http://127.0.0.1:3000` を開いてください。server はプロジェクト指定の Node.js で
+TypeScript を直接実行します。`vp run preview` はクライアントのみのプレビューです。
+
+server の起動口は `src/server/index.ts` に統一し、環境変数 `APP_ENV` で切り替えます。
+`vp run dev`（`dev:server`）は `APP_ENV=dev`、`vp run start` は `APP_ENV=prod` を設定します。
+`dev` は API のみ、`prod` は API とビルド済みクライアントを配信します。
+`prod` と完全一致する場合のみクライアントも配信し、未指定・不正な値を含むそれ以外は
+すべて `dev` として扱います。環境変数の検証は後続 PR で導入します。
+
+`src/server/app.ts` の `AppType` をクライアントへ type-only import し、
+レスポンス型は `InferResponseType` から導出します。手書きの共有 DTO は不要です。
+Hono RPC の型推論のため、client / server の TypeScript は `strict` を有効にしています。
+参考: [Hono RPC](https://hono.dev/docs/guides/rpc)。
+
+server の起動処理は `src/server/index.ts` に分離しています。
+`src/server/app.test.ts` では HTTP サーバーを起動せず `app.request()` で UT を実行します。
+`src/client/api.test.ts` は RPC 経由の応答と推論型を検証します。
+型アサーションは `vp run typecheck` / `vp check` で確認します。
+
 ## テスト
 
 Vite+ 同梱の Vitest を使用します。API は `vite-plus/test` から明示的に import します。

@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { api } from "./api";
+import type { HelloResponse } from "./api";
 import heroImg from "./assets/hero.png";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "./assets/vite.svg";
@@ -6,6 +8,32 @@ import "./App.css";
 
 function App() {
   const [count, setCount] = useState(0);
+  const [greeting, setGreeting] = useState<HelloResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadGreeting() {
+      try {
+        const response = await api.api.hello.$get({}, { init: { signal: controller.signal } });
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status}`);
+        }
+        const data = await response.json();
+        if (!controller.signal.aborted) {
+          setGreeting(data);
+        }
+      } catch {
+        if (!controller.signal.aborted) {
+          setError("API の取得に失敗しました。");
+        }
+      }
+    }
+
+    void loadGreeting();
+    return () => controller.abort();
+  }, []);
 
   return (
     <>
@@ -17,6 +45,11 @@ function App() {
         </div>
         <div>
           <h1>Get started!!!!!</h1>
+          {error ? (
+            <p role="alert">{error}</p>
+          ) : (
+            <p role="status">{greeting ? greeting.message : "API を読み込み中…"}</p>
+          )}
           <p>
             Edit <code>src/client/App.tsx</code> and save to test <code>HMR</code>
           </p>
