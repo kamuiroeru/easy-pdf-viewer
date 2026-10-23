@@ -32,6 +32,7 @@ export default defineConfig({
         resolve,
         test: {
           name: "unit",
+          env: { CONTENT_ROOT: "./content", THUMBNAIL_ROOT: "./thumbnails" },
           environment: "node",
           include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
         },
@@ -40,6 +41,7 @@ export default defineConfig({
         resolve,
         test: {
           name: "component",
+          env: { CONTENT_ROOT: "./content", THUMBNAIL_ROOT: "./thumbnails" },
           environment: "jsdom",
           include: ["src/**/*.test.tsx"],
           setupFiles: ["./tests/setup-component.ts"],

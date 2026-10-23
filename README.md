@@ -6,7 +6,8 @@
 
 ## 開発
 
-`vp install` のあと、`vp run dev` でクライアントと API を同時に起動します。
+`vp install` のあと、`.env.example` を `.env` にコピーし、公開対象とサムネイルのパスを設定します。
+`vp run dev` でクライアントと API を同時に起動します。
 `concurrently` を使い、Ctrl+C または片方の終了時には両方を停止します。
 Vite が表示する URL（通常 `http://localhost:5173`）を開いてください。
 個別に起動することもできます。
@@ -24,8 +25,18 @@ TypeScript を直接実行します。`vp run preview` はクライアントの�
 server の起動口は `src/server/index.ts` に統一し、環境変数 `APP_ENV` で切り替えます。
 `vp run dev`（`dev:server`）は `APP_ENV=dev`、`vp run start` は `APP_ENV=prod` を設定します。
 `dev` は API のみ、`prod` は API とビルド済みクライアントを配信します。
-`prod` と完全一致する場合のみクライアントも配信し、未指定・不正な値を含むそれ以外は
-すべて `dev` として扱います。環境変数の検証は後続 PR で導入します。
+`APP_ENV` の未指定時は `dev` となり、`dev`・`prod` 以外は起動時の検証で拒否します。
+
+公開対象のルートは `.env` の `CONTENT_ROOT`、PDF サムネイルのルートは
+`THUMBNAIL_ROOT` で明示指定します。両方とも必須で、未指定・空文字は起動時に拒否します。
+`dev:server` と `start` は Node.js の `--env-file=.env` で読み込みます。
+相対指定はプロセスの作業ディレクトリが基準です。日本語・空白を含むパスは引用符で囲んで指定できます。
+`.env` は Git の管理対象から除外します。
+`src/server/publicPaths.ts` の `publicPaths.content(path)`・`publicPaths.thumbnail(path)` は、
+URL デコード済みの相対パスを受け取り、ルート内の実パスを返します。日本語・空白を含むパスも使用できます。
+絶対パス・親ディレクトリ参照・ルート外を指すシンボリックリンクは拒否します。
+`PublicPathError.code` の `NOT_FOUND` はパスの不存在、`FORBIDDEN` はアクセス不可を表します。
+ルートの存在確認は解決時に行います。このサービスはパスの検証のみを行い、ファイルは配信しません。
 
 `src/server/app.ts` の `AppType` をクライアントへ type-only import し、
 レスポンス型は `InferResponseType` から導出します。手書きの共有 DTO は不要です。
