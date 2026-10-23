@@ -23,6 +23,7 @@
     "react-router": "^8.5.0"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",
     "@types/node": "^26.6.5",
@@ -32,6 +33,7 @@
     "concurrently": "^10.0.6",
     "jsdom": "^30.1.3",
     "lefthook": "^2.2.2",
+    "tailwindcss": "^4.3.3",
     "typescript": "~7.0.2",
     "vite": "catalog:",
     "vite-plus": "catalog:"
