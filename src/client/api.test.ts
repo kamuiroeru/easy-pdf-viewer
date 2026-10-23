@@ -2,7 +2,7 @@ import { hc } from "hono/client";
 import { describe, expect, expectTypeOf, it } from "vite-plus/test";
 import { app } from "@be/app.ts";
 import type { AppType } from "@be/app.ts";
-import type { HelloResponse } from "@fe/api.ts";
+import type { HelloResponse } from "./api.ts";
 
 describe("Hono RPC", () => {
   it("infers the server response type on the client", async () => {

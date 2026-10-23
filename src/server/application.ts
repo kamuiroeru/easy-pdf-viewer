@@ -1,8 +1,8 @@
 import { fileURLToPath } from "node:url";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
-import { app } from "@be/app.ts";
-import { env } from "@be/env.ts";
+import { app } from "./app.ts";
+import { env } from "./env.ts";
 
 export function createServerApp(
   appEnv = env.APP_ENV,

@@ -9,7 +9,7 @@ describe("server environment", () => {
   it("defaults APP_ENV to dev when unset", async () => {
     vi.stubEnv("APP_ENV", undefined);
 
-    const { env } = await import("@be/env.ts");
+    const { env } = await import("./env.ts");
 
     expect(env.APP_ENV).toBe("dev");
   });
@@ -17,7 +17,7 @@ describe("server environment", () => {
   it.each(["dev", "prod"])("accepts APP_ENV=%s", async (value) => {
     vi.stubEnv("APP_ENV", value);
 
-    const { env } = await import("@be/env.ts");
+    const { env } = await import("./env.ts");
 
     expect(env.APP_ENV).toBe(value);
   });
@@ -25,6 +25,6 @@ describe("server environment", () => {
   it.each(["invalid", "", "production"])("rejects APP_ENV=%s on import", async (value) => {
     vi.stubEnv("APP_ENV", value);
 
-    await expect(import("@be/env.ts")).rejects.toThrow("APP_ENV");
+    await expect(import("./env.ts")).rejects.toThrow("APP_ENV");
   });
 });

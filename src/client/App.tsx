@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { api } from "@fe/api";
-import type { HelloResponse } from "@fe/api";
+import { api } from "./api";
+import type { HelloResponse } from "./api";
 import heroImg from "@fe/assets/hero.png";
 import reactLogo from "@fe/assets/react.svg";
 import viteLogo from "@fe/assets/vite.svg";
