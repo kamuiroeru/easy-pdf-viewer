@@ -2,6 +2,10 @@
 
 - PR のタイトルと本文は日本語で記述する。
 
+## 共通コーディングルール
+
+- `.ts`・`.tsx` ファイルを作成・編集する前に、[TypeScript の import ルール](.claude/rules/typescript-imports.md)を読み、その指示に従う。
+
 <!--VITE PLUS START-->
 
 # Using Vite+, the Unified Toolchain for the Web
