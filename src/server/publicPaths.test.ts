@@ -1,8 +1,8 @@
-import { mkdtemp, mkdir, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import { chmod, mkdtemp, mkdir, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
-import { resolvePublicPath } from "./publicPaths.ts";
+import { resolvePublicPath, validatePublicRoots } from "./publicPaths.ts";
 
 let temporary: string;
 let root: string;
@@ -18,6 +18,55 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await rm(temporary, { recursive: true, force: true });
+});
+
+describe("validatePublicRoots", () => {
+  it("opens Japanese paths containing spaces and empty directories", async () => {
+    const empty = join(temporary, "empty");
+    await mkdir(empty);
+    await expect(
+      validatePublicRoots({
+        CONTENT_ROOT: join(root, "日本語 フォルダ"),
+        THUMBNAIL_ROOT: empty,
+      }),
+    ).resolves.toBeUndefined();
+    await expect(
+      validatePublicRoots({ CONTENT_ROOT: root, THUMBNAIL_ROOT: root }),
+    ).resolves.toBeUndefined();
+    const settings = { APP_ENV: "dev", CONTENT_ROOT: root, THUMBNAIL_ROOT: empty };
+    await expect(validatePublicRoots(settings)).resolves.toBeUndefined();
+  });
+
+  it.each(["CONTENT_ROOT", "THUMBNAIL_ROOT"] as const)(
+    "reports the setting and reason for an invalid %s",
+    async (name) => {
+      for (const path of [
+        join(temporary, "missing"),
+        join(root, "日本語 フォルダ", "資料 1.pdf"),
+      ]) {
+        await expect(
+          validatePublicRoots({ CONTENT_ROOT: root, THUMBNAIL_ROOT: root, [name]: path }),
+        ).rejects.toMatchObject({
+          message: expect.stringContaining(name),
+          cause: expect.objectContaining({ code: expect.stringMatching(/ENOENT|ENOTDIR/) }),
+        });
+      }
+    },
+  );
+
+  it.skipIf(process.getuid?.() === 0)("rejects a directory without read permission", async () => {
+    await chmod(root, 0o000);
+    try {
+      await expect(
+        validatePublicRoots({ CONTENT_ROOT: root, THUMBNAIL_ROOT: root }),
+      ).rejects.toMatchObject({
+        message: expect.stringContaining("CONTENT_ROOT"),
+        cause: expect.objectContaining({ code: "EACCES" }),
+      });
+    } finally {
+      await chmod(root, 0o700);
+    }
+  });
 });
 
 describe("resolvePublicPath", () => {

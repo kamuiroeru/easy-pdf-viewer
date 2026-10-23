@@ -1,6 +1,25 @@
-import { realpath, stat } from "node:fs/promises";
+import { opendir, realpath, stat } from "node:fs/promises";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { env } from "./env.ts";
+
+export async function validatePublicRoots(
+  roots: Pick<typeof env, "CONTENT_ROOT" | "THUMBNAIL_ROOT"> = env,
+): Promise<void> {
+  for (const name of ["CONTENT_ROOT", "THUMBNAIL_ROOT"] as const) {
+    const root = roots[name];
+    try {
+      const directory = await opendir(root);
+      try {
+        await directory.read();
+      } finally {
+        await directory.close();
+      }
+    } catch (cause) {
+      const reason = cause instanceof Error ? cause.message : String(cause);
+      throw new Error(`${name} のディレクトリを開けません (${root}): ${reason}`, { cause });
+    }
+  }
+}
 
 export class PublicPathError extends Error {
   readonly code: "NOT_FOUND" | "FORBIDDEN";
