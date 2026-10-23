@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { sleepMs } from "../shared/debugUtil.ts";
+import { sleepMs } from "@s/debugUtil.ts";
 
 export const app = new Hono().get("/api/hello", async (c) => {
   await sleepMs(1000);
