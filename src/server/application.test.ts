@@ -2,7 +2,7 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vite-plus/test";
-import { createServerApp } from "@be/application.ts";
+import { createServerApp } from "./application.ts";
 
 describe("client and API hosting", () => {
   let clientRoot: string;
