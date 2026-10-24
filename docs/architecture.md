@@ -47,6 +47,14 @@ compose.yaml
 
 Vite のルートは `src/client` とし、加工せず配信する静的ファイルは `src/client/public`、import して使用する画像などは `src/client/assets` に置く。フロントエンドのビルド出力は `dist/client` に配置する。閲覧対象の PDF・画像・動画は `public` に置かず、サーバーから配信する。
 
+## 一覧画面のルーティングとデータ取得
+
+一覧画面は React Router の Data Mode を使う。ルートディレクトリの URL は `/`、子ディレクトリは `/?path=<URL エンコードした相対パス>` とする。クエリでパスを表すため、拡張子を含むディレクトリ名も静的ファイルの URL と区別できる。
+
+loader は URL の `path` を読み取り、Hono RPC で一覧 API を呼ぶ。リクエストには React Router の中断シグナルを渡す。データ取得と画面遷移の状態は React Router で管理し、SWR・TanStack Query は追加しない。
+
+初回の読み込みは `HydrateFallback`、移動中は `useNavigation` で読み込み表示を出す。HTTP エラーと通信エラーはルートの `ErrorBoundary` で表示する。取得に成功して一覧が空の場合は、空ディレクトリのメッセージを表示する。
+
 ## ディレクトリ一覧と絞り込み
 
 `src/server/services/directoryListing.ts` の `listDirectory(path, root)` が、公開ルートからの相対パスを受け取り、既存の `resolvePublicPath` で検証してから直下の項目を読み取る。`path` の既定値は空文字列、`root` の既定値は `CONTENT_ROOT` とする。読み取りエラーは呼び出し元へ伝える。

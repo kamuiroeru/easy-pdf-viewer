@@ -1,54 +1,84 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { createMemoryRouter } from "react-router";
+import { RouterProvider } from "react-router/dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
-import App from "./App";
+import { routes } from "./router";
 
-describe("App", () => {
+function renderDirectory(url = "/") {
+  const router = createMemoryRouter(routes, { initialEntries: [url] });
+  render(<RouterProvider router={router} />);
+  return router;
+}
+
+describe("directory routes", () => {
   beforeEach(() => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(Response.json({ message: "Hello from Hono!" })),
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ entries: [] })));
+  });
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("loads the root and shows an empty directory", async () => {
+    renderDirectory();
+    expect(screen.getByRole("status").textContent).toContain("読み込み中");
+    expect(await screen.findByText("このディレクトリは空です。")).toBeTruthy();
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/directories?path=",
+      expect.objectContaining({ method: "GET", signal: expect.any(AbortSignal) }),
     );
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
+  it("loads a directory directly from its URL without changing special characters", async () => {
+    const path = "日本語/100% # & +.pdf";
+    vi.mocked(fetch).mockResolvedValue(
+      Response.json({
+        entries: [{ kind: "file", name: "book.pdf", path: `${path}/book.pdf`, format: "pdf" }],
+      }),
+    );
+    renderDirectory(`/?${new URLSearchParams({ path })}`);
+    expect(await screen.findByText("book.pdf")).toBeTruthy();
+    expect(
+      new URL(vi.mocked(fetch).mock.calls[0]![0] as string, "http://localhost").searchParams.get(
+        "path",
+      ),
+    ).toBe(path);
+    expect(screen.getByText(`現在のディレクトリ: /${path}`)).toBeTruthy();
   });
 
-  it("shows the greeting fetched through RPC", async () => {
-    render(<App />);
-
-    expect(screen.getByRole("status").textContent).toBe("API を読み込み中…");
-    expect(await screen.findByText("Hello from Hono!")).toBeTruthy();
-    expect(fetch).toHaveBeenCalledWith("/api/hello", expect.objectContaining({ method: "GET" }));
-  });
-
-  it("shows an error when the API returns a failure", async () => {
-    vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 500 }));
-    render(<App />);
-
-    expect((await screen.findByRole("alert")).textContent).toBe("API の取得に失敗しました。");
-  });
-
-  it("shows an error when the network request fails", async () => {
-    vi.mocked(fetch).mockRejectedValue(new TypeError("Network error"));
-    render(<App />);
-
-    expect((await screen.findByRole("alert")).textContent).toBe("API の取得に失敗しました。");
-  });
-
-  it("shows the initial count", () => {
-    render(<App />);
-
-    expect(screen.getByRole("button", { name: "Count is 0" }).textContent).toBe("Count is 0");
-  });
-
-  it("increments the count when clicked", async () => {
+  it("navigates to children, shows pending state, and returns to the root", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    vi.mocked(fetch).mockResolvedValueOnce(
+      Response.json({ entries: [{ kind: "directory", name: "子 #", path: "子 #" }] }),
+    );
+    const router = renderDirectory();
+    const child = await screen.findByRole("link", { name: "子 #/" });
+    let resolve!: (response: Response) => void;
+    vi.mocked(fetch).mockReturnValueOnce(
+      new Promise((done) => {
+        resolve = done;
+      }),
+    );
+    await user.click(child);
+    expect(screen.getByRole("status").textContent).toContain("読み込み中");
+    resolve(Response.json({ entries: [] }));
+    expect(await screen.findByText("現在のディレクトリ: /子 #")).toBeTruthy();
+    expect(new URLSearchParams(router.state.location.search).get("path")).toBe("子 #");
+    await user.click(screen.getByRole("link", { name: "ルートへ戻る" }));
+    await waitFor(() => expect(router.state.location.search).toBe(""));
+    expect(await screen.findByText("現在のディレクトリ: /")).toBeTruthy();
+  });
 
-    await user.click(screen.getByRole("button", { name: "Count is 0" }));
+  it.each([403, 404, 500])("shows an error for HTTP %i", async (status) => {
+    vi.mocked(fetch).mockResolvedValue(new Response(null, { status }));
+    renderDirectory("/?path=missing");
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      "ディレクトリの取得に失敗しました。",
+    );
+  });
 
-    expect(screen.getByRole("button", { name: "Count is 1" }).textContent).toBe("Count is 1");
+  it("shows an error for network failures", async () => {
+    vi.mocked(fetch).mockRejectedValue(new TypeError("Network error"));
+    renderDirectory();
+    expect(await screen.findByRole("alert")).toBeTruthy();
   });
 });
