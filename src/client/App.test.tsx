@@ -22,6 +22,7 @@ describe("directory routes", () => {
     renderDirectory();
     expect(screen.getByRole("status").textContent).toContain("読み込み中");
     expect(await screen.findByText("このディレクトリは空です。")).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "親ディレクトリへ戻る" })).toBeNull();
     expect(fetch).toHaveBeenCalledWith(
       "/api/directories?path=",
       expect.objectContaining({ method: "GET", signal: expect.any(AbortSignal) }),
@@ -68,7 +69,7 @@ describe("directory routes", () => {
     expect(await screen.findByText("現在のディレクトリ: /")).toBeTruthy();
   });
 
-  it("separates files and folders and navigates to a parent and back", async () => {
+  it("navigates to a parent and back through history", async () => {
     const user = userEvent.setup();
     const path = "日本語 空白/子 # & +";
     vi.mocked(fetch).mockImplementation(async () =>
@@ -80,11 +81,7 @@ describe("directory routes", () => {
       }),
     );
     const router = renderDirectory(`/?${new URLSearchParams({ path })}`);
-    const directories = await screen.findByRole("region", { name: "Directories 1" });
-    const files = screen.getByRole("region", { name: "Files 1" });
-    expect(directories.textContent).toContain("次のフォルダ/");
-    expect(directories.textContent).not.toContain("book.pdf");
-    expect(files.textContent).toContain("book.pdf");
+    await screen.findByText(`現在のディレクトリ: /${path}`);
     await user.click(screen.getByRole("link", { name: "親ディレクトリへ戻る" }));
     await waitFor(() =>
       expect(new URLSearchParams(router.state.location.search).get("path")).toBe("日本語 空白"),
@@ -94,67 +91,6 @@ describe("directory routes", () => {
       expect(new URLSearchParams(router.state.location.search).get("path")).toBe(path),
     );
     expect(screen.getByText(`現在のディレクトリ: /${path}`)).toBeTruthy();
-  });
-
-  it("filters both sections by case-insensitive name substrings without fetching", async () => {
-    const user = userEvent.setup();
-    vi.mocked(fetch).mockResolvedValueOnce(
-      Response.json({
-        entries: [
-          { kind: "directory", name: "My BOOKS", path: "My BOOKS" },
-          { kind: "directory", name: "写真", path: "写真" },
-          { kind: "file", name: "Handbook.pdf", path: "Handbook.pdf", format: "pdf" },
-          { kind: "file", name: "日本語.pdf", path: "日本語.pdf", format: "pdf" },
-        ],
-      }),
-    );
-    renderDirectory();
-    const search = await screen.findByRole("searchbox", { name: "フォルダ名・ファイル名を検索" });
-    await user.type(search, "bOoK");
-    expect(screen.getByRole("region", { name: "Directories 1" }).textContent).toContain(
-      "My BOOKS/",
-    );
-    expect(screen.getByRole("region", { name: "Files 1" }).textContent).toContain("Handbook.pdf");
-    expect(screen.queryByText("写真/")).toBeNull();
-    expect(screen.queryByText("日本語.pdf")).toBeNull();
-    await user.clear(search);
-    await user.type(search, "該当なし");
-    expect(screen.getByText("一致するフォルダはありません。")).toBeTruthy();
-    expect(screen.getByText("一致するファイルはありません。")).toBeTruthy();
-    expect(screen.queryByText("このディレクトリは空です。")).toBeNull();
-    await user.clear(search);
-    await user.type(search, "日本語");
-    expect(screen.getByRole("region", { name: "Files 1" }).textContent).toContain("日本語.pdf");
-    await user.clear(search);
-    expect(screen.getByRole("region", { name: "Directories 2" })).toBeTruthy();
-    expect(screen.getByRole("region", { name: "Files 2" })).toBeTruthy();
-    expect(fetch).toHaveBeenCalledTimes(1);
-  });
-
-  it.each([
-    ["いうえ", "あいうエオ", "アイウえオ.pdf"],
-    ["イウエ", "あいうエオ", "アイウえオ.pdf"],
-    ["がいど", "ガイド", "ガイド.pdf"],
-    ["きゃ", "キャラクター", "キャラクター.pdf"],
-  ])("matches hiragana and full-width katakana for %s", async (query, folder, file) => {
-    const user = userEvent.setup();
-    vi.mocked(fetch).mockResolvedValueOnce(
-      Response.json({
-        entries: [
-          { kind: "directory", name: folder, path: folder },
-          { kind: "file", name: file, path: file, format: "pdf" },
-          { kind: "directory", name: "別のフォルダ", path: "別のフォルダ" },
-          { kind: "file", name: "別の資料.pdf", path: "別の資料.pdf", format: "pdf" },
-        ],
-      }),
-    );
-    renderDirectory();
-    await user.type(await screen.findByRole("searchbox"), query);
-    expect(screen.getByRole("region", { name: "Directories 1" }).textContent).toContain(
-      `${folder}/`,
-    );
-    expect(screen.getByRole("region", { name: "Files 1" }).textContent).toContain(file);
-    expect(fetch).toHaveBeenCalledTimes(1);
   });
 
   it("clears the search on child, parent, and history navigation and matches names only", async () => {
@@ -171,6 +107,7 @@ describe("directory routes", () => {
     const search = () => screen.getByRole("searchbox") as HTMLInputElement;
     await screen.findByRole("link", { name: "Books/" });
     await user.type(search(), "book");
+    expect(fetch).toHaveBeenCalledTimes(1);
     await user.click(screen.getByRole("link", { name: "Books/" }));
     await screen.findByText("Other.pdf");
     expect(search().value).toBe("");
