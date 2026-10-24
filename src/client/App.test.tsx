@@ -96,6 +96,95 @@ describe("directory routes", () => {
     expect(screen.getByText(`現在のディレクトリ: /${path}`)).toBeTruthy();
   });
 
+  it("filters both sections by case-insensitive name substrings without fetching", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetch).mockResolvedValueOnce(
+      Response.json({
+        entries: [
+          { kind: "directory", name: "My BOOKS", path: "My BOOKS" },
+          { kind: "directory", name: "写真", path: "写真" },
+          { kind: "file", name: "Handbook.pdf", path: "Handbook.pdf", format: "pdf" },
+          { kind: "file", name: "日本語.pdf", path: "日本語.pdf", format: "pdf" },
+        ],
+      }),
+    );
+    renderDirectory();
+    const search = await screen.findByRole("searchbox", { name: "フォルダ名・ファイル名を検索" });
+    await user.type(search, "bOoK");
+    expect(screen.getByRole("region", { name: "Directories 1" }).textContent).toContain(
+      "My BOOKS/",
+    );
+    expect(screen.getByRole("region", { name: "Files 1" }).textContent).toContain("Handbook.pdf");
+    expect(screen.queryByText("写真/")).toBeNull();
+    expect(screen.queryByText("日本語.pdf")).toBeNull();
+    await user.clear(search);
+    await user.type(search, "該当なし");
+    expect(screen.getByText("一致するフォルダはありません。")).toBeTruthy();
+    expect(screen.getByText("一致するファイルはありません。")).toBeTruthy();
+    expect(screen.queryByText("このディレクトリは空です。")).toBeNull();
+    await user.clear(search);
+    await user.type(search, "日本語");
+    expect(screen.getByRole("region", { name: "Files 1" }).textContent).toContain("日本語.pdf");
+    await user.clear(search);
+    expect(screen.getByRole("region", { name: "Directories 2" })).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Files 2" })).toBeTruthy();
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ["いうえ", "あいうエオ", "アイウえオ.pdf"],
+    ["イウエ", "あいうエオ", "アイウえオ.pdf"],
+    ["がいど", "ガイド", "ガイド.pdf"],
+    ["きゃ", "キャラクター", "キャラクター.pdf"],
+  ])("matches hiragana and full-width katakana for %s", async (query, folder, file) => {
+    const user = userEvent.setup();
+    vi.mocked(fetch).mockResolvedValueOnce(
+      Response.json({
+        entries: [
+          { kind: "directory", name: folder, path: folder },
+          { kind: "file", name: file, path: file, format: "pdf" },
+          { kind: "directory", name: "別のフォルダ", path: "別のフォルダ" },
+          { kind: "file", name: "別の資料.pdf", path: "別の資料.pdf", format: "pdf" },
+        ],
+      }),
+    );
+    renderDirectory();
+    await user.type(await screen.findByRole("searchbox"), query);
+    expect(screen.getByRole("region", { name: "Directories 1" }).textContent).toContain(
+      `${folder}/`,
+    );
+    expect(screen.getByRole("region", { name: "Files 1" }).textContent).toContain(file);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("clears the search on child, parent, and history navigation and matches names only", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetch).mockImplementation(async (input) => {
+      const path = new URL(input as string, "http://localhost").searchParams.get("path");
+      return Response.json({
+        entries: path
+          ? [{ kind: "file", name: "Other.pdf", path: "Books/Other.pdf", format: "pdf" }]
+          : [{ kind: "directory", name: "Books", path: "Books" }],
+      });
+    });
+    const router = renderDirectory();
+    const search = () => screen.getByRole("searchbox") as HTMLInputElement;
+    await screen.findByRole("link", { name: "Books/" });
+    await user.type(search(), "book");
+    await user.click(screen.getByRole("link", { name: "Books/" }));
+    await screen.findByText("Other.pdf");
+    expect(search().value).toBe("");
+    await user.type(search(), "book");
+    expect(screen.queryByText("Other.pdf")).toBeNull();
+    await user.click(screen.getByRole("link", { name: "親ディレクトリへ戻る" }));
+    await screen.findByRole("link", { name: "Books/" });
+    expect(search().value).toBe("");
+    await user.type(search(), "book");
+    await router.navigate(-1);
+    await screen.findByText("Other.pdf");
+    expect(search().value).toBe("");
+  });
+
   it.each([403, 404, 500])("shows an error for HTTP %i", async (status) => {
     vi.mocked(fetch).mockResolvedValue(new Response(null, { status }));
     renderDirectory("/?path=missing");
