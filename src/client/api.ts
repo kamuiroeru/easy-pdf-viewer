@@ -6,7 +6,3 @@ export const api = hc<AppType>("/");
 
 export type HelloResponse = InferResponseType<typeof api.api.hello.$get>;
 export type DirectoryResponse = InferResponseType<typeof api.api.directories.$get, 200>;
-export type DirectoryErrorResponse = Exclude<
-  InferResponseType<typeof api.api.directories.$get>,
-  DirectoryResponse
->;

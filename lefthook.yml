@@ -3,3 +3,7 @@ pre-commit:
     check:
       run: vp check --fix {staged_files}
       stage_fixed: true
+pre-push:
+  commands:
+    knip:
+      run: vp run knip

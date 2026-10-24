@@ -73,8 +73,3 @@ export async function resolvePublicPath(root: string, path: string): Promise<str
     throw error;
   }
 }
-
-export const publicPaths = {
-  content: (path: string) => resolvePublicPath(env.CONTENT_ROOT, path),
-  thumbnail: (path: string) => resolvePublicPath(env.THUMBNAIL_ROOT, path),
-};
