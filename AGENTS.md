@@ -1,3 +1,8 @@
+## Local instructions
+
+- At the start of a conversation, read `AGENTS.local.md` in the repository root once if it exists, and follow its environment-specific instructions throughout the conversation in addition to this file. Do not check for or read it again on subsequent turns unless the user explicitly asks you to reload it.
+- Keep environment-specific prompts in `AGENTS.local.md`, which is excluded from Git. Do not put shared project rules there.
+
 ## Pull requests
 
 - Write PR titles and descriptions in Japanese.
