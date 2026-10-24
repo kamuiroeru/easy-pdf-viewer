@@ -2,9 +2,9 @@ import { readdir } from "node:fs/promises";
 import { extname, posix } from "node:path";
 import { env } from "@be/env.ts";
 import { resolvePublicPath } from "@be/publicPaths.ts";
-import type { DirectoryEntry, DirectoryEntryKind } from "@s/directory.ts";
+import type { DirectoryEntry, FileFormat } from "@s/directory.ts";
 
-const fileKinds = new Map<string, DirectoryEntryKind>([
+const fileFormats = new Map<string, FileFormat>([
   [".pdf", "pdf"],
   [".gif", "gif"],
   [".webm", "webm"],
@@ -17,13 +17,12 @@ export async function listDirectory(path = "", root = env.CONTENT_ROOT): Promise
   const directory = await resolvePublicPath(root, path);
   const entries: DirectoryEntry[] = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
-    const kind = entry.isDirectory()
-      ? "directory"
-      : entry.isFile()
-        ? fileKinds.get(extname(entry.name).toLowerCase())
-        : undefined;
-    if (kind) {
-      entries.push({ name: entry.name, path: posix.join(path, entry.name), kind });
+    const base = { name: entry.name, path: posix.join(path, entry.name) };
+    if (entry.isDirectory()) {
+      entries.push({ ...base, kind: "directory" });
+    } else if (entry.isFile()) {
+      const format = fileFormats.get(extname(entry.name).toLowerCase());
+      if (format) entries.push({ ...base, kind: "file", format });
     }
   }
   return entries.sort((a, b) => {

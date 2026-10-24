@@ -1,8 +1,10 @@
-export type DirectoryEntryKind = "directory" | "pdf" | "gif" | "webm" | "png" | "jpeg";
+export type FileFormat = "pdf" | "gif" | "webm" | "png" | "jpeg";
 
-export interface DirectoryEntry {
+type EntryBase = {
   name: string;
   /** Unencoded path relative to the content root, separated by `/`. */
   path: string;
-  kind: DirectoryEntryKind;
-}
+};
+
+export type DirectoryEntry = EntryBase &
+  ({ kind: "directory" } | { kind: "file"; format: FileFormat });

@@ -35,7 +35,7 @@ it("returns all immediate folders and supported files in deterministic order", a
       ["e.jpg", "jpeg"],
       ["f.jpeg", "jpeg"],
       ["z.JpEg", "jpeg"],
-    ].map(([name, kind]) => ({ name, path: name, kind })),
+    ].map(([name, format]) => ({ name, path: name, kind: "file", format })),
   ]);
 });
 
@@ -44,7 +44,7 @@ it("returns root-relative unencoded paths and an empty list for empty directorie
   expect(await listDirectory("資料 空白", root)).toEqual([]);
   await writeFile(join(root, "資料 空白", "100%.pdf"), "");
   expect(await listDirectory("./資料 空白/", root)).toEqual([
-    { name: "100%.pdf", path: "資料 空白/100%.pdf", kind: "pdf" },
+    { name: "100%.pdf", path: "資料 空白/100%.pdf", kind: "file", format: "pdf" },
   ]);
 });
 
@@ -61,7 +61,7 @@ it("omits symbolic links, including broken links and links outside the root", as
   ]);
   await writeFile(join(root, "folder", "inside.pdf"), "");
   expect(await listDirectory("linked-folder", root)).toEqual([
-    { name: "inside.pdf", path: "linked-folder/inside.pdf", kind: "pdf" },
+    { name: "inside.pdf", path: "linked-folder/inside.pdf", kind: "file", format: "pdf" },
   ]);
   await expect(listDirectory("outside", root)).rejects.toMatchObject({ code: "FORBIDDEN" });
 });

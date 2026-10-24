@@ -51,7 +51,7 @@ Vite のルートは `src/client` とし、加工せず配信する静的ファ�
 
 `src/server/services/directoryListing.ts` の `listDirectory(path, root)` が、公開ルートからの相対パスを受け取り、既存の `resolvePublicPath` で検証してから直下の項目を読み取る。`path` の既定値は空文字列、`root` の既定値は `CONTENT_ROOT` とする。読み取りエラーは呼び出し元へ伝える。
 
-共有型 `DirectoryEntry` は `src/shared/directory.ts` に定義する。各項目は名前 `name`、公開ルート基準の相対パス `path`、種類 `kind` を持つ。パスの区切りには `/` を使い、URL エンコードは行わない。種類は `directory`・`pdf`・`gif`・`webm`・`png`・`jpeg` とし、`.jpg` と `.jpeg` はともに `jpeg` とする。リンクを含むディレクトリを指定した場合も、返すパスには指定時の相対パスを使う。
+共有型 `DirectoryEntry` は `src/shared/directory.ts` に定義する。各項目は名前 `name`、公開ルート基準の相対パス `path`、種類 `kind` を持つ。パスの区切りには `/` を使い、URL エンコードは行わない。種類 `kind` は `directory` または `file` とする。`file` の場合だけ形式 `format` を必須とし、値は `pdf`・`gif`・`webm`・`png`・`jpeg` とする。`.jpg` と `.jpeg` はともに `jpeg` とする。ファイルシステム上の種類とファイル形式を分けるため、共有型は `kind` を判別子とする union で表す。リンクを含むディレクトリを指定した場合も、返すパスには指定時の相対パスを使う。
 
 拡張子は最後の拡張子を小文字にして判定する。一覧はフォルダを先に並べ、それぞれ名前を JavaScript の文字列比較で昇順にする。ロケールによる並び順の違いを避けるため、UTF-16 コード単位順を使う。シンボリックリンクは参照先をたどらず一覧から除外する。
 
