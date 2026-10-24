@@ -1,4 +1,5 @@
 import { ArrowUp, ArrowUpRight, Folder } from "lucide-react";
+import { useState } from "react";
 import { Link, useLoaderData, useNavigation } from "react-router";
 import type { directoryLoader } from "./router";
 
@@ -16,11 +17,26 @@ export function DirectoryError() {
 }
 
 export default function App() {
-  const { path, entries } = useLoaderData<typeof directoryLoader>();
-  const navigation = useNavigation();
+  const data = useLoaderData<typeof directoryLoader>();
+  return <Directory key={data.path} {...data} />;
+}
 
-  const directories = entries.filter((entry) => entry.kind === "directory");
-  const files = entries.filter((entry) => entry.kind === "file");
+function normalizeSearch(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[ァ-ヶ]/g, (character) => String.fromCharCode(character.charCodeAt(0) - 0x60));
+}
+
+function Directory({ path, entries }: Awaited<ReturnType<typeof directoryLoader>>) {
+  const navigation = useNavigation();
+  const [query, setQuery] = useState("");
+  const normalizedQuery = normalizeSearch(query);
+  const matchingEntries = entries.filter((entry) =>
+    normalizeSearch(entry.name).includes(normalizedQuery),
+  );
+
+  const directories = matchingEntries.filter((entry) => entry.kind === "directory");
+  const files = matchingEntries.filter((entry) => entry.kind === "file");
   const parentPath = path.split("/").slice(0, -1).join("/");
   const directoryUrl = (value: string) =>
     value ? `/?${new URLSearchParams({ path: value })}` : "/";
@@ -35,6 +51,17 @@ export default function App() {
         <p className="text-2xl leading-normal font-semibold [overflow-wrap:anywhere] max-[560px]:text-xl">
           現在のディレクトリ: /{path}
         </p>
+        <label className="mt-5 block text-sm text-[#a6b8ac]" htmlFor="directory-search">
+          フォルダ名・ファイル名を検索
+        </label>
+        <input
+          className="mt-2 w-full rounded-lg border border-[#52685a] bg-[#20382a] px-3 py-2 text-base text-[#e4eee7] outline-offset-4 focus-visible:outline-2 focus-visible:outline-[#a5cf86]"
+          id="directory-search"
+          type="search"
+          placeholder="現在のディレクトリ内を検索"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
       </header>
       {navigation.state !== "idle" && <DirectoryLoading />}
       {entries.length === 0 && <p>このディレクトリは空です。</p>}
@@ -46,7 +73,9 @@ export default function App() {
           </span>
         </h2>
         {directories.length === 0 ? (
-          <p className="text-[#9eafa3]">フォルダはありません。</p>
+          <p className="text-[#9eafa3]">
+            {query ? "一致するフォルダはありません。" : "フォルダはありません。"}
+          </p>
         ) : (
           <ul className="grid list-none grid-cols-2 gap-2 p-0">
             {directories.map((entry) => (
@@ -72,7 +101,9 @@ export default function App() {
           </span>
         </h2>
         {files.length === 0 ? (
-          <p className="text-[#9eafa3]">ファイルはありません。</p>
+          <p className="text-[#9eafa3]">
+            {query ? "一致するファイルはありません。" : "ファイルはありません。"}
+          </p>
         ) : (
           <ul className="grid list-none grid-cols-2 gap-2 p-0">
             {files.map((entry) => (
