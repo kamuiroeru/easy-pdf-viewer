@@ -25,25 +25,37 @@ export default function App() {
     value ? `/?${new URLSearchParams({ path: value })}` : "/";
 
   return (
-    <main className="directory-page" aria-busy={navigation.state !== "idle"}>
-      <header className="directory-header">
-        <h1>Easy PDF Viewer</h1>
-        <p className="current-path">現在のディレクトリ: /{path}</p>
+    <main
+      className="mx-auto max-w-[1120px] px-6 pt-10 pb-[calc(112px+env(safe-area-inset-bottom,0px))] max-[560px]:px-4 max-[560px]:pt-6"
+      aria-busy={navigation.state !== "idle"}
+    >
+      <header className="border-b border-[#2a3930] pb-7">
+        <h1 className="mb-3 text-sm leading-normal font-medium text-[#a6b8ac]">Easy PDF Viewer</h1>
+        <p className="text-2xl leading-normal font-semibold [overflow-wrap:anywhere] max-[560px]:text-xl">
+          現在のディレクトリ: /{path}
+        </p>
       </header>
       {navigation.state !== "idle" && <DirectoryLoading />}
       {entries.length === 0 && <p>このディレクトリは空です。</p>}
-      <section aria-labelledby="directories-heading">
-        <h2 id="directories-heading">
-          Directories <span>{directories.length}</span>
+      <section className="mt-8" aria-labelledby="directories-heading">
+        <h2 className="mb-4 text-lg leading-normal font-semibold" id="directories-heading">
+          Directories{" "}
+          <span className="ml-2 text-sm leading-normal font-normal text-[#9eafa3]">
+            {directories.length}
+          </span>
         </h2>
         {directories.length === 0 ? (
-          <p className="empty-section">フォルダはありません。</p>
+          <p className="text-[#9eafa3]">フォルダはありません。</p>
         ) : (
-          <ul className="entry-grid">
+          <ul className="grid list-none grid-cols-2 gap-2 p-0">
             {directories.map((entry) => (
-              <li key={entry.path}>
-                <Link className="folder-card" to={directoryUrl(entry.path)}>
+              <li className="min-w-0" key={entry.path}>
+                <Link
+                  className="flex h-full min-h-9 items-center gap-2 rounded-lg bg-[#a5cf86] px-3 py-2 text-xs leading-normal font-semibold text-[#182b19] [overflow-wrap:anywhere] hover:bg-[#b4df94]"
+                  to={directoryUrl(entry.path)}
+                >
                   <svg
+                    className="size-5 shrink-0"
                     aria-hidden="true"
                     viewBox="0 0 24 24"
                     fill="none"
@@ -52,8 +64,8 @@ export default function App() {
                   >
                     <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3Z" />
                   </svg>
-                  <span>{entry.name}/</span>
-                  <span className="folder-arrow" aria-hidden="true">
+                  <span className="min-w-0">{entry.name}/</span>
+                  <span className="ml-auto shrink-0 text-base leading-normal" aria-hidden="true">
                     ↗
                   </span>
                 </Link>
@@ -62,16 +74,22 @@ export default function App() {
           </ul>
         )}
       </section>
-      <section aria-labelledby="files-heading">
-        <h2 id="files-heading">
-          Files <span>{files.length}</span>
+      <section className="mt-8" aria-labelledby="files-heading">
+        <h2 className="mb-4 text-lg leading-normal font-semibold" id="files-heading">
+          Files{" "}
+          <span className="ml-2 text-sm leading-normal font-normal text-[#9eafa3]">
+            {files.length}
+          </span>
         </h2>
         {files.length === 0 ? (
-          <p className="empty-section">ファイルはありません。</p>
+          <p className="text-[#9eafa3]">ファイルはありません。</p>
         ) : (
-          <ul className="entry-grid">
+          <ul className="grid list-none grid-cols-2 gap-2 p-0">
             {files.map((entry) => (
-              <li className="file-card" key={entry.path}>
+              <li
+                className="min-h-24 min-w-0 rounded-xl bg-[#20382a] p-6 [overflow-wrap:anywhere] max-[560px]:p-4"
+                key={entry.path}
+              >
                 {entry.name}
               </li>
             ))}
@@ -80,7 +98,7 @@ export default function App() {
       </section>
       {path && (
         <Link
-          className="parent-link"
+          className="fixed bottom-[calc(16px+env(safe-area-inset-bottom,0px))] left-[calc(16px+env(safe-area-inset-left,0px))] z-10 inline-flex min-h-14 items-center gap-2.5 rounded-full border border-[#b4df94] bg-[#a5cf86] px-5 py-3 font-semibold text-[#182b19] shadow-[0_4px_20px_#0006] hover:bg-[#b4df94]"
           aria-label="親ディレクトリへ戻る"
           to={directoryUrl(parentPath)}
         >
