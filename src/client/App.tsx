@@ -1,3 +1,4 @@
+import { ArrowUp, ArrowUpRight, Folder } from "lucide-react";
 import { Link, useLoaderData, useNavigation } from "react-router";
 import type { directoryLoader } from "./router";
 
@@ -54,20 +55,9 @@ export default function App() {
                   className="flex h-full min-h-9 items-center gap-2 rounded-lg bg-[#a5cf86] px-3 py-2 text-xs leading-normal font-semibold [overflow-wrap:anywhere] text-[#182b19] hover:bg-[#b4df94]"
                   to={directoryUrl(entry.path)}
                 >
-                  <svg
-                    className="size-5 shrink-0"
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                  >
-                    <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3Z" />
-                  </svg>
+                  <Folder className="size-4 shrink-0" aria-hidden="true" strokeWidth="1.5" />
                   <span className="min-w-0">{entry.name}/</span>
-                  <span className="ml-auto shrink-0 text-base leading-normal" aria-hidden="true">
-                    ↗
-                  </span>
+                  <ArrowUpRight className="ml-auto size-4 shrink-0" aria-hidden="true" />
                 </Link>
               </li>
             ))}
@@ -102,7 +92,7 @@ export default function App() {
           aria-label="親ディレクトリへ戻る"
           to={directoryUrl(parentPath)}
         >
-          <span aria-hidden="true">↑</span>
+          <ArrowUp className="size-4 shrink-0" aria-hidden="true" />
           <span>親へ戻る</span>
         </Link>
       )}
