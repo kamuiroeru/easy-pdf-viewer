@@ -1,5 +1,8 @@
 import { serve } from "@hono/node-server";
 import { createServerApp } from "./application.ts";
+import { validatePublicRoots } from "./publicPaths.ts";
+
+await validatePublicRoots();
 
 const app = createServerApp();
 
