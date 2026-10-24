@@ -6,54 +6,153 @@
 
 @layer base {
   :root {
-    --text: #6b6375;
-    --text-h: #08060d;
-    --bg: #fff;
-    --border: #e5e4e7;
-
-    --sans: system-ui, "Segoe UI", Roboto, sans-serif;
-    --heading: system-ui, "Segoe UI", Roboto, sans-serif;
-
-    font: 18px/145% var(--sans);
-    letter-spacing: 0.18px;
-    color-scheme: light dark;
-    color: var(--text);
-    background: var(--bg);
+    font:
+      16px/1.5 system-ui,
+      "Segoe UI",
+      sans-serif;
+    color-scheme: dark;
+    color: #edf3ef;
+    background: #101713;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-
-    @media (max-width: 1024px) {
-      font-size: 16px;
-    }
   }
 
+  body {
+    margin: 0;
+  }
   #root {
-    width: 1126px;
-    max-width: 100%;
-    margin: 0 auto;
-    text-align: center;
-    border-inline: 1px solid var(--border);
     min-height: 100svh;
-    display: flex;
-    flex-direction: column;
   }
-
-  h1 {
-    font-family: var(--heading);
-    font-weight: 500;
-    color: var(--text-h);
+  a:focus-visible {
+    outline: 3px solid #c3f5a0;
+    outline-offset: 5px;
   }
 }
 
-@layer base {
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --text: #9ca3af;
-      --text-h: #f3f4f6;
-      --bg: #16171d;
-      --border: #2e303a;
-    }
+.directory-page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 40px 24px 64px;
+}
+.directory-header {
+  padding-bottom: 28px;
+  border-bottom: 1px solid #2a3930;
+}
+.directory-header h1 {
+  color: #a6b8ac;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+.current-path {
+  font-size: 24px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.parent-link {
+  position: fixed;
+  left: calc(16px + env(safe-area-inset-left, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 12px 20px;
+  border: 1px solid #b4df94;
+  border-radius: 999px;
+  background: #a5cf86;
+  color: #182b19;
+  font-weight: 600;
+  box-shadow: 0 4px 20px #0006;
+}
+.parent-link:hover {
+  background: #b4df94;
+}
+.directory-page {
+  padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
+}
+.directory-page section {
+  margin-top: 32px;
+}
+.directory-page h2 {
+  margin-bottom: 16px;
+  font-size: 18px;
+  font-weight: 600;
+}
+.directory-page h2 span {
+  margin-left: 8px;
+  color: #9eafa3;
+  font-size: 14px;
+  font-weight: 400;
+}
+.entry-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+}
+.entry-grid > li {
+  min-width: 0;
+}
+.folder-card,
+.file-card {
+  padding: 24px;
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+.folder-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 100%;
+  min-height: 96px;
+  background: #a5cf86;
+  color: #182b19;
+  font-weight: 600;
+}
+.folder-card:hover {
+  background: #b4df94;
+}
+.folder-card svg {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+.folder-card > span:first-of-type {
+  min-width: 0;
+}
+.folder-arrow {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 22px;
+}
+.file-card {
+  min-height: 96px;
+  background: #20382a;
+}
+.empty-section {
+  color: #9eafa3;
+}
+
+@media (max-width: 560px) {
+  .directory-page {
+    padding: 24px 16px calc(112px + env(safe-area-inset-bottom, 0px));
+  }
+  .current-path {
+    font-size: 20px;
+  }
+  .entry-grid {
+    gap: 12px;
+  }
+  .folder-card,
+  .file-card {
+    padding: 16px;
+  }
+  .folder-card {
+    gap: 8px;
   }
 }

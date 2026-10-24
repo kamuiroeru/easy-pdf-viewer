@@ -63,9 +63,37 @@ describe("directory routes", () => {
     resolve(Response.json({ entries: [] }));
     expect(await screen.findByText("現在のディレクトリ: /子 #")).toBeTruthy();
     expect(new URLSearchParams(router.state.location.search).get("path")).toBe("子 #");
-    await user.click(screen.getByRole("link", { name: "ルートへ戻る" }));
+    await user.click(screen.getByRole("link", { name: "親ディレクトリへ戻る" }));
     await waitFor(() => expect(router.state.location.search).toBe(""));
     expect(await screen.findByText("現在のディレクトリ: /")).toBeTruthy();
+  });
+
+  it("separates files and folders and navigates to a parent and back", async () => {
+    const user = userEvent.setup();
+    const path = "日本語 空白/子 # & +";
+    vi.mocked(fetch).mockImplementation(async () =>
+      Response.json({
+        entries: [
+          { kind: "directory", name: "次のフォルダ", path: `${path}/次のフォルダ` },
+          { kind: "file", name: "book.pdf", path: `${path}/book.pdf`, format: "pdf" },
+        ],
+      }),
+    );
+    const router = renderDirectory(`/?${new URLSearchParams({ path })}`);
+    const directories = await screen.findByRole("region", { name: "Directories 1" });
+    const files = screen.getByRole("region", { name: "Files 1" });
+    expect(directories.textContent).toContain("次のフォルダ/");
+    expect(directories.textContent).not.toContain("book.pdf");
+    expect(files.textContent).toContain("book.pdf");
+    await user.click(screen.getByRole("link", { name: "親ディレクトリへ戻る" }));
+    await waitFor(() =>
+      expect(new URLSearchParams(router.state.location.search).get("path")).toBe("日本語 空白"),
+    );
+    await router.navigate(-1);
+    await waitFor(() =>
+      expect(new URLSearchParams(router.state.location.search).get("path")).toBe(path),
+    );
+    expect(screen.getByText(`現在のディレクトリ: /${path}`)).toBeTruthy();
   });
 
   it.each([403, 404, 500])("shows an error for HTTP %i", async (status) => {
