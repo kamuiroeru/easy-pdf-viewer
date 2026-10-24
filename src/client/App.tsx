@@ -51,7 +51,7 @@ export default function App() {
             {directories.map((entry) => (
               <li className="min-w-0" key={entry.path}>
                 <Link
-                  className="flex h-full min-h-9 items-center gap-2 rounded-lg bg-[#a5cf86] px-3 py-2 text-xs leading-normal font-semibold text-[#182b19] [overflow-wrap:anywhere] hover:bg-[#b4df94]"
+                  className="flex h-full min-h-9 items-center gap-2 rounded-lg bg-[#a5cf86] px-3 py-2 text-xs leading-normal font-semibold [overflow-wrap:anywhere] text-[#182b19] hover:bg-[#b4df94]"
                   to={directoryUrl(entry.path)}
                 >
                   <svg
