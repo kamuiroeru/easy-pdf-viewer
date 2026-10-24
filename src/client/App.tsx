@@ -1,5 +1,5 @@
 import { ArrowUp, ArrowUpRight, Folder } from "lucide-react";
-import { useState } from "react";
+import { memo, useDeferredValue, useMemo, useState } from "react";
 import { Link, useLoaderData, useNavigation } from "react-router";
 import type { directoryLoader } from "./router";
 
@@ -30,16 +30,8 @@ function normalizeSearch(value: string) {
 function Directory({ path, entries }: Awaited<ReturnType<typeof directoryLoader>>) {
   const navigation = useNavigation();
   const [query, setQuery] = useState("");
-  const normalizedQuery = normalizeSearch(query);
-  const matchingEntries = entries.filter((entry) =>
-    normalizeSearch(entry.name).includes(normalizedQuery),
-  );
-
-  const directories = matchingEntries.filter((entry) => entry.kind === "directory");
-  const files = matchingEntries.filter((entry) => entry.kind === "file");
+  const deferredQuery = useDeferredValue(query);
   const parentPath = path.split("/").slice(0, -1).join("/");
-  const directoryUrl = (value: string) =>
-    value ? `/?${new URLSearchParams({ path: value })}` : "/";
 
   return (
     <main
@@ -65,6 +57,47 @@ function Directory({ path, entries }: Awaited<ReturnType<typeof directoryLoader>
       </header>
       {navigation.state !== "idle" && <DirectoryLoading />}
       {entries.length === 0 && <p>このディレクトリは空です。</p>}
+      <div aria-busy={query !== deferredQuery}>
+        <DirectoryResults entries={entries} query={deferredQuery} />
+      </div>
+      {path && (
+        <Link
+          className="fixed bottom-[calc(16px+env(safe-area-inset-bottom,0px))] left-[calc(16px+env(safe-area-inset-left,0px))] z-10 inline-flex min-h-14 items-center gap-2.5 rounded-full border border-[#b4df94] bg-[#a5cf86] px-5 py-3 font-semibold text-[#182b19] shadow-[0_4px_20px_#0006] hover:bg-[#b4df94]"
+          aria-label="親ディレクトリへ戻る"
+          to={directoryUrl(parentPath)}
+        >
+          <ArrowUp className="size-4 shrink-0" aria-hidden="true" />
+          <span>親へ戻る</span>
+        </Link>
+      )}
+    </main>
+  );
+}
+
+function directoryUrl(value: string) {
+  return value ? `/?${new URLSearchParams({ path: value })}` : "/";
+}
+
+const DirectoryResults = memo(function DirectoryResults({
+  entries,
+  query,
+}: {
+  entries: Awaited<ReturnType<typeof directoryLoader>>["entries"];
+  query: string;
+}) {
+  const searchableEntries = useMemo(
+    () => entries.map((entry) => ({ entry, searchName: normalizeSearch(entry.name) })),
+    [entries],
+  );
+  const normalizedQuery = normalizeSearch(query);
+  const matchingEntries = searchableEntries
+    .filter(({ searchName }) => searchName.includes(normalizedQuery))
+    .map(({ entry }) => entry);
+  const directories = matchingEntries.filter((entry) => entry.kind === "directory");
+  const files = matchingEntries.filter((entry) => entry.kind === "file");
+
+  return (
+    <>
       <section className="mt-8" aria-labelledby="directories-heading">
         <h2 className="mb-4 text-lg leading-normal font-semibold" id="directories-heading">
           Directories{" "}
@@ -117,16 +150,6 @@ function Directory({ path, entries }: Awaited<ReturnType<typeof directoryLoader>
           </ul>
         )}
       </section>
-      {path && (
-        <Link
-          className="fixed bottom-[calc(16px+env(safe-area-inset-bottom,0px))] left-[calc(16px+env(safe-area-inset-left,0px))] z-10 inline-flex min-h-14 items-center gap-2.5 rounded-full border border-[#b4df94] bg-[#a5cf86] px-5 py-3 font-semibold text-[#182b19] shadow-[0_4px_20px_#0006] hover:bg-[#b4df94]"
-          aria-label="親ディレクトリへ戻る"
-          to={directoryUrl(parentPath)}
-        >
-          <ArrowUp className="size-4 shrink-0" aria-hidden="true" />
-          <span>親へ戻る</span>
-        </Link>
-      )}
-    </main>
+    </>
   );
-}
+});
