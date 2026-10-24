@@ -53,7 +53,11 @@ export default defineConfig({
     outDir: "../../dist/client",
     emptyOutDir: true,
   },
-  fmt: {},
+  fmt: {
+    sortTailwindcss: {
+      stylesheet: "./src/client/index.css",
+    },
+  },
   lint: {
     plugins: ["react", "typescript", "oxc"],
     rules: {
