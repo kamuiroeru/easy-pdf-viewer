@@ -91,7 +91,7 @@
 .entry-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 8px;
   list-style: none;
   padding: 0;
 }
@@ -107,9 +107,12 @@
 .folder-card {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   height: 100%;
-  min-height: 96px;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
   background: #a5cf86;
   color: #182b19;
   font-weight: 600;
@@ -118,8 +121,8 @@
   background: #b4df94;
 }
 .folder-card svg {
-  width: 28px;
-  height: 28px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
 }
 .folder-card > span:first-of-type {
@@ -128,7 +131,7 @@
 .folder-arrow {
   margin-left: auto;
   flex-shrink: 0;
-  font-size: 22px;
+  font-size: 16px;
 }
 .file-card {
   min-height: 96px;
@@ -145,10 +148,6 @@
   .current-path {
     font-size: 20px;
   }
-  .entry-grid {
-    gap: 12px;
-  }
-  .folder-card,
   .file-card {
     padding: 16px;
   }
