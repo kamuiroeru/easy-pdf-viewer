@@ -3,7 +3,17 @@ import { describe, expect, expectTypeOf, it } from "vite-plus/test";
 import { app } from "@be/app.ts";
 import type { DirectoryEntry } from "@s/directory.ts";
 import type { AppType } from "@be/app.ts";
-import type { DirectoryResponse, HelloResponse } from "./api.ts";
+import type { DirectoryErrorResponse, DirectoryResponse, HelloResponse } from "./api.ts";
+
+it("exposes directory errors without the successful response body", () => {
+  expectTypeOf<DirectoryErrorResponse>().toEqualTypeOf<
+    | { readonly error: "INVALID_PATH" }
+    | { readonly error: "NOT_DIRECTORY" }
+    | { readonly error: "FORBIDDEN" }
+    | { readonly error: "NOT_FOUND" }
+    | { readonly error: "INTERNAL_ERROR" }
+  >();
+});
 
 describe("Hono RPC", () => {
   it("infers the server response type on the client", async () => {
