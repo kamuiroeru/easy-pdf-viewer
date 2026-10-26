@@ -6,7 +6,7 @@ import { validator } from "hono/validator";
 import { API_ERROR } from "@be/apiErrors.ts";
 import { env } from "@be/env.ts";
 import { PublicPathError, resolvePublicPath } from "@be/publicPaths.ts";
-import { parseByteRange } from "@be/http/byteRange.ts";
+import { ByteRangeKind, parseByteRange, type ByteRangeResult } from "@be/http/byteRange.ts";
 
 const contentTypes = new Map([
   [".pdf", "application/pdf"],
@@ -46,18 +46,18 @@ export function createFileRoutes(root = env.CONTENT_ROOT) {
           }
           c.header("Accept-Ranges", "bytes");
           c.header("X-Content-Type-Options", "nosniff");
-          const range =
+          const range: ByteRangeResult =
             c.req.header("If-Range") === undefined
               ? parseByteRange(c.req.header("Range"), info.size)
-              : undefined;
-          if (range === null) {
+              : { kind: ByteRangeKind.Ignore };
+          if (range.kind === ByteRangeKind.Unsatisfiable) {
             await handle.close();
             c.header("Content-Range", `bytes */${info.size}`);
             c.header("Content-Length", "0");
             return c.body(null, 416);
           }
           c.header("Content-Type", contentType);
-          if (range) {
+          if (range.kind === ByteRangeKind.Partial) {
             c.header("Content-Range", `bytes ${range.start}-${range.end}/${info.size}`);
             c.header("Content-Length", String(range.end - range.start + 1));
             return c.body(
