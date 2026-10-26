@@ -9,13 +9,12 @@ function normalizeSearch(value: string) {
     .replace(/[ァ-ヶ]/g, (character) => String.fromCharCode(character.charCodeAt(0) - 0x60));
 }
 
-export const DirectoryResults = memo(function DirectoryResults({
-  entries,
-  query,
-}: {
+export const DirectoryResults = memo(function DirectoryResults(props: {
   entries: DirectoryEntry[];
   query: string;
 }) {
+  const { entries, query } = props;
+
   const searchableEntries = useMemo(
     () => entries.map((entry) => ({ entry, searchName: normalizeSearch(entry.name) })),
     [entries],

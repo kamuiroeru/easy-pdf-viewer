@@ -3,13 +3,9 @@ import { Link } from "react-router";
 import { directoryUrl } from "./directoryUrl";
 import type { DirectoryEntry } from "@s/directory";
 
-export function DirectoryList({
-  directories,
-  hasQuery,
-}: {
-  directories: DirectoryEntry[];
-  hasQuery: boolean;
-}) {
+export function DirectoryList(props: { directories: DirectoryEntry[]; hasQuery: boolean }) {
+  const { directories, hasQuery } = props;
+
   return (
     <section className="mt-8" aria-labelledby="directories-heading">
       <h2 className="mb-4 text-lg leading-normal font-semibold" id="directories-heading">

@@ -23,7 +23,8 @@ export default function App() {
   return <Directory key={data.path} {...data} />;
 }
 
-function Directory({ path, entries }: Awaited<ReturnType<typeof directoryLoader>>) {
+function Directory(props: Awaited<ReturnType<typeof directoryLoader>>) {
+  const { path, entries } = props;
   const navigation = useNavigation();
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);

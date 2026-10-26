@@ -1,12 +1,10 @@
-export function DirectoryHeader({
-  path,
-  query,
-  onQueryChange,
-}: {
+export function DirectoryHeader(props: {
   path: string;
   query: string;
   onQueryChange: (query: string) => void;
 }) {
+  const { path, query, onQueryChange } = props;
+
   return (
     <header className="border-b border-[#2a3930] pb-7">
       <h1 className="mb-3 text-sm leading-normal font-medium text-[#a6b8ac]">Easy PDF Viewer</h1>

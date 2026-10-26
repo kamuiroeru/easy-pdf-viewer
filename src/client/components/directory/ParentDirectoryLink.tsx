@@ -2,7 +2,9 @@ import { ArrowUp } from "lucide-react";
 import { Link } from "react-router";
 import { directoryUrl } from "./directoryUrl";
 
-export function ParentDirectoryLink({ path }: { path: string }) {
+export function ParentDirectoryLink(props: { path: string }) {
+  const { path } = props;
+
   const parentPath = path.split("/").slice(0, -1).join("/");
   return (
     <Link

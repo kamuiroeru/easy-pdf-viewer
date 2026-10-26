@@ -1,6 +1,8 @@
 import type { DirectoryEntry } from "@s/directory";
 
-export function FileList({ files, hasQuery }: { files: DirectoryEntry[]; hasQuery: boolean }) {
+export function FileList(props: { files: DirectoryEntry[]; hasQuery: boolean }) {
+  const { files, hasQuery } = props;
+
   return (
     <section className="mt-8" aria-labelledby="files-heading">
       <h2 className="mb-4 text-lg leading-normal font-semibold" id="files-heading">
