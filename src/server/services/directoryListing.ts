@@ -2,15 +2,15 @@ import { readdir } from "node:fs/promises";
 import { extname, posix } from "node:path";
 import { env } from "@be/env.ts";
 import { resolvePublicPath } from "@be/publicPaths.ts";
-import type { DirectoryEntry, FileFormat } from "@s/directory.ts";
+import { FILE_FORMAT, type DirectoryEntry, type FileFormat } from "@s/directory.ts";
 
 const fileFormats = new Map<string, FileFormat>([
-  [".pdf", "pdf"],
-  [".gif", "gif"],
-  [".webm", "webm"],
-  [".png", "png"],
-  [".jpg", "jpeg"],
-  [".jpeg", "jpeg"],
+  [".pdf", FILE_FORMAT.PDF],
+  [".gif", FILE_FORMAT.GIF],
+  [".webm", FILE_FORMAT.WEBM],
+  [".png", FILE_FORMAT.PNG],
+  [".jpg", FILE_FORMAT.JPEG],
+  [".jpeg", FILE_FORMAT.JPEG],
 ]);
 
 export async function listDirectory(path = "", root = env.CONTENT_ROOT): Promise<DirectoryEntry[]> {

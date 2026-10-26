@@ -3,7 +3,7 @@ import type { DirectoryEntry } from "@s/directory";
 import { DirectoryList } from "./DirectoryList";
 import { FileList } from "./FileList";
 
-function normalizeSearch(value: string) {
+function normalizeSearch(value: string): string {
   return value
     .toLowerCase()
     .replace(/[ァ-ヶ]/g, (character) => String.fromCharCode(character.charCodeAt(0) - 0x60));
