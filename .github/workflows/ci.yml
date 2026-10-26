@@ -24,5 +24,6 @@ jobs:
           node-version: "26.12.1"
           cache: true
       - run: vp check
+      - run: vp run knip
       - run: vp test
       - run: vp build

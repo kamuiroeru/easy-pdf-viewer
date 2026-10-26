@@ -2,7 +2,8 @@ import { chmod, mkdtemp, mkdir, realpath, rm, symlink, writeFile } from "node:fs
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
-import { resolvePublicPath, validatePublicRoots } from "./publicPaths.ts";
+import { env } from "./env.ts";
+import { publicPaths, resolvePublicPath, validatePublicRoots } from "./publicPaths.ts";
 
 let temporary: string;
 let root: string;
@@ -18,6 +19,24 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await rm(temporary, { recursive: true, force: true });
+});
+
+it("resolves content and thumbnails relative to their configured roots", async () => {
+  const originalContentRoot = env.CONTENT_ROOT;
+  const originalThumbnailRoot = env.THUMBNAIL_ROOT;
+  env.CONTENT_ROOT = root;
+  env.THUMBNAIL_ROOT = join(temporary, "content-other");
+  try {
+    await expect(publicPaths.content("日本語 フォルダ/資料 1.pdf")).resolves.toBe(
+      await realpath(join(root, "日本語 フォルダ", "資料 1.pdf")),
+    );
+    await expect(publicPaths.thumbnail("secret.pdf")).resolves.toBe(
+      await realpath(join(temporary, "content-other", "secret.pdf")),
+    );
+  } finally {
+    env.CONTENT_ROOT = originalContentRoot;
+    env.THUMBNAIL_ROOT = originalThumbnailRoot;
+  }
 });
 
 describe("validatePublicRoots", () => {
