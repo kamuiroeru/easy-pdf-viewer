@@ -9,9 +9,15 @@
 
 ## Shared coding rules
 
-- Before creating or editing `.ts` or `.tsx` files, read and follow the [TypeScript import rules](.claude/rules/typescript-imports.md).
-- Before creating or editing `.tsx` files, read and follow the [React props rules](.claude/rules/react-props.md).
-- Before adding or editing documents under `docs/`, read and follow the [documentation writing rules](.claude/rules/docs-writing.md).
+Before creating or editing files, read and follow the rules for the applicable file type:
+
+- `.ts` / `.tsx`:
+  - [TypeScript imports](.claude/rules/typescript-imports.md)
+  - [TypeScript return types](.claude/rules/typescript-return-types.md)
+  - [TypeScript constant naming](.claude/rules/typescript-constants.md)
+  - For `.tsx`, also follow the [React props rules](.claude/rules/react-props.md).
+- Documents under `docs/`:
+  - [Documentation writing](.claude/rules/docs-writing.md)
 
 <!--VITE PLUS START-->
 

@@ -65,6 +65,15 @@ loader は URL の `path` を読み取り、Hono RPC で一覧 API を呼ぶ。�
 
 一覧 API は現在のディレクトリの全項目を返す。検索欄への入力に応じて、フロントエンドで取得済みの一覧をフォルダ名・ファイル名で絞り込む。絞り込みのための API リクエストは送信しない。
 
+## ファイル配信と HTTP Range
+
+`GET /api/files?path=<URL エンコードした相対パス>` は、公開対象のファイルをストリームで配信する。PDF・WebM・画像に共通して `Accept-Ranges: bytes` を返す。
+
+- 単一の byte Range（`bytes=start-end`、`bytes=start-`、`bytes=-suffixLength`）には 206 を返し、`Content-Range` と配信するバイト数の `Content-Length` を設定する。終端がファイル末尾を超えた場合は末尾まで、末尾指定の長さがファイルサイズを超えた場合は全バイトを返す。
+- 開始位置がファイルサイズ以上、末尾指定の長さが 0、空ファイルに対する有効な Range は 416 とし、`Content-Range: bytes */<ファイルサイズ>` と `Content-Length: 0` を返す。
+- Range なし、不正な形式（開始位置が終端より大きい場合を含む）、複数 Range、bytes 以外の単位は、ファイル全体を 200 で返す。`Content-Length` はファイルサイズとし、`Content-Range` は付けない。
+- ETag・Last-Modified による検証は行わず、`If-Range` がある場合は Range を無視して全体を 200 で返す。
+
 ## 開発・本番の起動方針
 
 開発時は Vite と Hono を並行起動し、API・コンテンツへのリクエストを Vite から Hono にプロキシする。本番は Hono からビルド済みフロントエンドも配信し、同一オリジンで提供する。
@@ -76,7 +85,6 @@ loader は URL の `path` を読み取り、Hono RPC で一覧 API を呼ぶ。�
 以下は実装前に詰める案であり、確定仕様ではない。
 
 - PDF はブラウザ標準ビューアで開き、表示要件が増えたら PDF.js を検討する。
-- PDF・動画は HTTP Range リクエストに対応した配信を行う。
 - サムネイルは Redis に存在すれば返し、なければ JPG を読み、キャッシュする。Redis 障害時は元ファイルから配信する。
 - キャッシュの更新判定には JPG の相対パス・更新日時・サイズを使い、TTL とメモリ上限を設定する。
 - スクロール位置はディレクトリと並び順をキーに localStorage へ保存する。端末間同期が必要になったら永続化 API を検討する。
