@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { ByteRangeKind, parseByteRange } from "./byteRange.ts";
+import { BYTE_RANGE_KIND, parseByteRange } from "./byteRange.ts";
 
 describe("parseByteRange", () => {
   it.each([
@@ -19,7 +19,7 @@ describe("parseByteRange", () => {
     ["bytes=-1", 1, 0, 0],
     ["bytes=9007199254740990-", Number.MAX_SAFE_INTEGER, 9007199254740990, 9007199254740990],
   ])("resolves %s for a %i-byte file", (value, size, start, end) => {
-    expect(parseByteRange(value, size)).toEqual({ kind: ByteRangeKind.Partial, start, end });
+    expect(parseByteRange(value, size)).toEqual({ kind: BYTE_RANGE_KIND.PARTIAL, start, end });
   });
 
   it.each([
@@ -31,7 +31,7 @@ describe("parseByteRange", () => {
     ["bytes=0-", 0],
     ["bytes=-1", 0],
   ])("returns unsatisfiable for %s on a %i-byte file", (value, size) => {
-    expect(parseByteRange(value, size)).toEqual({ kind: ByteRangeKind.Unsatisfiable });
+    expect(parseByteRange(value, size)).toEqual({ kind: BYTE_RANGE_KIND.UNSATISFIABLE });
   });
 
   it.each([
@@ -47,6 +47,6 @@ describe("parseByteRange", () => {
     "bytes= 0-1",
     "bytes=0-1extra",
   ])("returns ignore for missing, invalid or unsupported Range %s", (value) => {
-    expect(parseByteRange(value, 5)).toEqual({ kind: ByteRangeKind.Ignore });
+    expect(parseByteRange(value, 5)).toEqual({ kind: BYTE_RANGE_KIND.IGNORE });
   });
 });
