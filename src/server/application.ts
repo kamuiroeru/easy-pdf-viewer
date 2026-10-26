@@ -7,7 +7,7 @@ import { env } from "./env.ts";
 export function createServerApp(
   appEnv = env.APP_ENV,
   clientRoot = fileURLToPath(new URL("../../dist/client/", import.meta.url)),
-) {
+): typeof app | Hono {
   if (appEnv !== "prod") {
     return app;
   }

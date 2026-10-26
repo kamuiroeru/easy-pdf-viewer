@@ -1,8 +1,11 @@
 import type { LoaderFunctionArgs, RouteObject } from "react-router";
+import type { DirectoryResponse } from "./api";
 import { api } from "./api";
 import App, { DirectoryError, DirectoryLoading } from "./App";
 
-export async function directoryLoader({ request }: LoaderFunctionArgs) {
+export async function directoryLoader({
+  request,
+}: LoaderFunctionArgs): Promise<DirectoryResponse & { path: string }> {
   const path = new URL(request.url).searchParams.get("path") ?? "";
   const response = await api.api.directories.$get(
     { query: { path } },

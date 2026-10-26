@@ -5,7 +5,7 @@ import { RouterProvider } from "react-router/dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { routes } from "./router";
 
-function renderDirectory(url = "/") {
+function renderDirectory(url = "/"): ReturnType<typeof createMemoryRouter> {
   const router = createMemoryRouter(routes, { initialEntries: [url] });
   render(<RouterProvider router={router} />);
   return router;
@@ -104,7 +104,7 @@ describe("directory routes", () => {
       });
     });
     const router = renderDirectory();
-    const search = () => screen.getByRole("searchbox") as HTMLInputElement;
+    const search = (): HTMLInputElement => screen.getByRole("searchbox") as HTMLInputElement;
     await screen.findByRole("link", { name: "Books/" });
     await user.type(search(), "book");
     expect(fetch).toHaveBeenCalledTimes(1);
