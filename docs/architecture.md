@@ -74,6 +74,17 @@ loader は URL の `path` を読み取り、Hono RPC で一覧 API を呼ぶ。�
 - Range なし、不正な形式（開始位置が終端より大きい場合を含む）、複数 Range、bytes 以外の単位は、ファイル全体を 200 で返す。`Content-Length` はファイルサイズとし、`Content-Range` は付けない。
 - ETag・Last-Modified による検証は行わず、`If-Range` がある場合は Range を無視して全体を 200 で返す。
 
+## PDF サムネイルの配信
+
+`GET /api/thumbnails?path=<URL エンコードした PDF の相対パス>` は、`THUMBNAIL_ROOT` 内の対応する JPG を配信する。PDF の相対パスの末尾 `.pdf`（大文字・小文字を区別しない）を小文字 `.jpg` に置き換え、ディレクトリ構造とそれ以外の名前はそのまま使う。例: `資料/book.PDF` は `THUMBNAIL_ROOT/資料/book.jpg` に対応する。PDF 本体の存在確認は行わない。
+
+一覧の `kind === "file"` かつ `format === "pdf"` の項目から、`"/api/thumbnails?path=" + encodeURIComponent(entry.path)` で URL を組み立てる。パスは一度だけ URL デコードする。
+
+- 成功時は 200 と JPG の全バイトを返し、`Content-Type: image/jpeg`、ファイルサイズの `Content-Length`、`X-Content-Type-Options: nosniff` を設定する。
+- `path` の省略・空文字・重複、PDF 以外の拡張子は 400 `{ "error": "INVALID_PATH" }` とする。
+- JPG が存在しない場合は 404 `{ "error": "NOT_FOUND" }` とする。代替画像は返さない。
+- 絶対パス、`..`、NUL、ルート外を指すシンボリックリンク、ディレクトリ、実体の拡張子が `.jpg` 以外のリンクは 403 `{ "error": "FORBIDDEN" }` とする。読み取り権限がない場合も 403 とし、その他の読み取りエラーは 500 `{ "error": "INTERNAL_ERROR" }` とする。
+
 ## 開発・本番の起動方針
 
 開発時は Vite と Hono を並行起動し、API・コンテンツへのリクエストを Vite から Hono にプロキシする。本番は Hono からビルド済みフロントエンドも配信し、同一オリジンで提供する。
