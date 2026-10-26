@@ -1,10 +1,12 @@
 import { open, stat } from "node:fs/promises";
 import { extname } from "node:path";
+import { Readable } from "node:stream";
 import { Hono } from "hono";
 import { validator } from "hono/validator";
 import { API_ERROR } from "@be/apiErrors.ts";
 import { env } from "@be/env.ts";
 import { PublicPathError, resolvePublicPath } from "@be/publicPaths.ts";
+import { parseByteRange } from "@be/http/byteRange.ts";
 
 const contentTypes = new Map([
   [".pdf", "application/pdf"],
@@ -42,10 +44,29 @@ export function createFileRoutes(root = env.CONTENT_ROOT) {
             await handle.close();
             return API_ERROR.forbidden(c);
           }
-          c.header("Content-Type", contentType);
-          c.header("Content-Length", String(info.size));
+          c.header("Accept-Ranges", "bytes");
           c.header("X-Content-Type-Options", "nosniff");
-          return c.body(handle.readableWebStream({ autoClose: true }));
+          const range =
+            c.req.header("If-Range") === undefined
+              ? parseByteRange(c.req.header("Range"), info.size)
+              : undefined;
+          if (range === null) {
+            await handle.close();
+            c.header("Content-Range", `bytes */${info.size}`);
+            c.header("Content-Length", "0");
+            return c.body(null, 416);
+          }
+          c.header("Content-Type", contentType);
+          if (range) {
+            c.header("Content-Range", `bytes ${range.start}-${range.end}/${info.size}`);
+            c.header("Content-Length", String(range.end - range.start + 1));
+            return c.body(
+              Readable.toWeb(handle.createReadStream(range)) as ReadableStream<Uint8Array>,
+              206,
+            );
+          }
+          c.header("Content-Length", String(info.size));
+          return c.body(Readable.toWeb(handle.createReadStream()) as ReadableStream<Uint8Array>);
         } catch (error) {
           await handle.close();
           throw error;

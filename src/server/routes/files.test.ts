@@ -17,8 +17,10 @@ afterEach(async () => {
   await rm(root, { recursive: true, force: true });
 });
 
-function request(query: string) {
-  return new Hono().route("/api/files", createFileRoutes(root)).request(`/api/files${query}`);
+function request(query: string, headers?: Record<string, string>) {
+  return new Hono()
+    .route("/api/files", createFileRoutes(root))
+    .request(`/api/files${query}`, { headers });
 }
 
 it.each([
@@ -78,4 +80,65 @@ it("decodes paths only once", async () => {
   const response = await request("?path=%252e%252e.pdf");
   expect(response.status).toBe(200);
   expect(new Uint8Array(await response.arrayBuffer())).toEqual(body);
+});
+
+it.each([
+  ["bytes=0-1", 0, 1],
+  ["bytes=1-3", 1, 3],
+  ["bytes=3-", 3, 4],
+  ["bytes=-2", 3, 4],
+  ["bytes=2-99", 2, 4],
+  ["bytes=-99", 0, 4],
+  ["bytes=0-99999999999999999999999", 0, 4],
+  ["bytes=-99999999999999999999999", 0, 4],
+  ["BYTES=0-0", 0, 0],
+])("serves a single range %s", async (range, start, end) => {
+  await writeFile(join(root, "sample.webm"), body);
+  const response = await request("?path=sample.webm", { Range: range });
+  expect(response.status).toBe(206);
+  expect(response.headers.get("accept-ranges")).toBe("bytes");
+  expect(response.headers.get("content-type")).toBe("video/webm");
+  expect(response.headers.get("content-range")).toBe(`bytes ${start}-${end}/5`);
+  expect(response.headers.get("content-length")).toBe(String(end - start + 1));
+  expect(new Uint8Array(await response.arrayBuffer())).toEqual(body.slice(start, end + 1));
+});
+
+it.each(["bytes=5-", "bytes=99-100", "bytes=-0", "bytes=99999999999999999999999-"])(
+  "rejects an unsatisfiable range %s",
+  async (range) => {
+    await writeFile(join(root, "sample.pdf"), body);
+    const response = await request("?path=sample.pdf", { Range: range });
+    expect(response.status).toBe(416);
+    expect(response.headers.get("content-range")).toBe("bytes */5");
+    expect(response.headers.get("content-length")).toBe("0");
+    expect(await response.text()).toBe("");
+  },
+);
+
+it.each(["bytes=3-1", "bytes=-", "bytes=abc-def", "items=0-1", "bytes=0-1,3-4", "bytes=1.5-2"])(
+  "ignores unsupported or malformed range %s",
+  async (range) => {
+    await writeFile(join(root, "sample.pdf"), body);
+    const response = await request("?path=sample.pdf", { Range: range });
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-range")).toBeNull();
+    expect(response.headers.get("content-length")).toBe("5");
+    expect(new Uint8Array(await response.arrayBuffer())).toEqual(body);
+  },
+);
+
+it("returns the full file for If-Range without a matching validator", async () => {
+  await writeFile(join(root, "sample.pdf"), body);
+  const response = await request("?path=sample.pdf", { Range: "bytes=0-1", "If-Range": '"old"' });
+  expect(response.status).toBe(200);
+  expect(new Uint8Array(await response.arrayBuffer())).toEqual(body);
+});
+
+it.each([undefined, "bytes=0-", "bytes=-1"])("handles empty files with range %s", async (range) => {
+  await writeFile(join(root, "empty.pdf"), "");
+  const response = await request("?path=empty.pdf", range ? { Range: range } : undefined);
+  expect(response.status).toBe(range ? 416 : 200);
+  expect(response.headers.get("content-range")).toBe(range ? "bytes */0" : null);
+  expect(response.headers.get("content-length")).toBe("0");
+  expect(await response.text()).toBe("");
 });
