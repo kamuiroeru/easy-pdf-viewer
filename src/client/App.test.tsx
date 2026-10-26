@@ -90,7 +90,7 @@ describe("directory routes", () => {
     await waitFor(() =>
       expect(new URLSearchParams(router.state.location.search).get("path")).toBe(path),
     );
-    expect(screen.getByText(`現在のディレクトリ: /${path}`)).toBeTruthy();
+    expect(await screen.findByText(`現在のディレクトリ: /${path}`)).toBeTruthy();
   });
 
   it("clears the search on child, parent, and history navigation and matches names only", async () => {
