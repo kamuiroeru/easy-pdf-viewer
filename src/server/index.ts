@@ -1,6 +1,6 @@
 import { serve } from "@hono/node-server";
 import { createServerApp } from "./application.ts";
-import { validatePublicRoots } from "./publicPaths.ts";
+import { validatePublicRoots } from "@be/services/publicPaths.ts";
 
 await validatePublicRoots();
 

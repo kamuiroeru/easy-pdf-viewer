@@ -1,7 +1,7 @@
 import { readdir } from "node:fs/promises";
 import { extname, posix } from "node:path";
 import { env } from "@be/env.ts";
-import { resolvePublicPath } from "@be/publicPaths.ts";
+import { resolvePublicPath } from "./publicPaths.ts";
 import { FILE_FORMAT, type DirectoryEntry, type FileFormat } from "@s/directory.ts";
 
 const fileFormats = new Map<string, FileFormat>([

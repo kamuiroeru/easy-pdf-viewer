@@ -1,6 +1,6 @@
 import { opendir, realpath, stat } from "node:fs/promises";
 import { isAbsolute, relative, resolve, sep } from "node:path";
-import { env } from "./env.ts";
+import { env } from "@be/env.ts";
 
 export async function validatePublicRoots(
   roots: Pick<typeof env, "CONTENT_ROOT" | "THUMBNAIL_ROOT"> = env,
