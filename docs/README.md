@@ -2,12 +2,13 @@
 
 実装に先立って要件と設計を相談し、合意した内容をこのディレクトリに残します。
 
-| ドキュメント                       | 内容                           |
-| ---------------------------------- | ------------------------------ |
-| [requirements.md](requirements.md) | 要件と前提                     |
-| [architecture.md](architecture.md) | 採用する構成とコードの責務     |
-| [decisions.md](decisions.md)       | 設計判断とその理由             |
-| [research/](research/README.md)    | 技術比較、調査結果、検討中の案 |
+| ドキュメント                       | 内容                                 |
+| ---------------------------------- | ------------------------------------ |
+| [development.md](development.md)   | 開発環境のセットアップ、起動、テスト |
+| [requirements.md](requirements.md) | 要件と前提                           |
+| [architecture.md](architecture.md) | 採用する構成とコードの責務           |
+| [decisions.md](decisions.md)       | 設計判断とその理由                   |
+| [research/](research/README.md)    | 技術比較、調査結果、検討中の案       |
 
 ## 更新方針
 
