@@ -2,7 +2,7 @@ import { chmod, mkdtemp, mkdir, realpath, rm, symlink, writeFile } from "node:fs
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
-import { env } from "./env.ts";
+import { env } from "@be/env.ts";
 import { publicPaths, resolvePublicPath, validatePublicRoots } from "./publicPaths.ts";
 
 let temporary: string;

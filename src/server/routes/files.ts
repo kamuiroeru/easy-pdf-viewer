@@ -5,8 +5,9 @@ import { Hono } from "hono";
 import { validator } from "hono/validator";
 import { API_ERROR } from "@be/apiErrors.ts";
 import { env } from "@be/env.ts";
-import { PublicPathError, resolvePublicPath } from "@be/publicPaths.ts";
+import { resolvePublicPath } from "@be/services/publicPaths.ts";
 import { BYTE_RANGE_KIND, parseByteRange, type ByteRangeResult } from "@be/http/byteRange.ts";
+import { pathErrorResponse } from "./pathErrors.ts";
 
 const contentTypes = new Map([
   [".pdf", "application/pdf"],
@@ -72,15 +73,7 @@ export function createFileRoutes(root = env.CONTENT_ROOT) {
           throw error;
         }
       } catch (error) {
-        if (error instanceof PublicPathError) {
-          return error.code === "FORBIDDEN" ? API_ERROR.forbidden(c) : API_ERROR.notFound(c);
-        }
-        const code = error instanceof Error && "code" in error ? error.code : undefined;
-        if (code === "ENOENT" || code === "ENOTDIR") return API_ERROR.notFound(c);
-        if (code === "EACCES" || code === "EPERM" || code === "EISDIR") {
-          return API_ERROR.forbidden(c);
-        }
-        return API_ERROR.internal(c);
+        return pathErrorResponse(c, error, "file");
       }
     },
   );
