@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vite-plus/test";
 import { app } from "./app.ts";
 
+it("registers the thumbnail delivery API", async () => {
+  const response = await app.request("/api/thumbnails");
+  expect(response.status).toBe(400);
+  expect(await response.json()).toEqual({ error: "INVALID_PATH" });
+});
+
 it("registers the file delivery API", async () => {
   const response = await app.request("/api/files");
   expect(response.status).toBe(400);
