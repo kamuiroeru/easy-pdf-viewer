@@ -39,7 +39,7 @@ server の起動口は `src/server/index.ts` に統一し、環境変数 `APP_EN
 `dev:server` と `start` は Node.js の `--env-file=.env` で読み込みます。
 相対指定はプロセスの作業ディレクトリが基準です。日本語・空白を含むパスは引用符で囲んで指定できます。
 `.env` は Git の管理対象から除外します。
-`src/server/publicPaths.ts` の `publicPaths.content(path)`・`publicPaths.thumbnail(path)` は、
+`src/server/services/publicPaths.ts` の `publicPaths.content(path)`・`publicPaths.thumbnail(path)` は、
 URL デコード済みの相対パスを受け取り、ルート内の実パスを返します。日本語・空白を含むパスも使用できます。
 絶対パス・親ディレクトリ参照・ルート外を指すシンボリックリンクは拒否します。
 `PublicPathError.code` の `NOT_FOUND` はパスの不存在、`FORBIDDEN` はアクセス不可を表します。
