@@ -1,9 +1,10 @@
+import { FAILURE } from "@be/services/failures.ts";
 import { open, stat } from "node:fs/promises";
 import { extname } from "node:path";
 import { Readable } from "node:stream";
 import { Hono } from "hono";
 import { validator } from "hono/validator";
-import { API_ERROR } from "@be/apiErrors.ts";
+import { failureResponse, onError } from "@be/apiErrors.ts";
 import { env } from "@be/env.ts";
 import { resolvePublicPath } from "@be/services/publicPaths.ts";
 import { BYTE_RANGE_KIND, parseByteRange, type ByteRangeResult } from "@be/http/byteRange.ts";
@@ -20,11 +21,11 @@ const contentTypes = new Map([
 
 /** GET /?path=<URL-encoded relative file path>. */
 export function createFileRoutes(root = env.CONTENT_ROOT) {
-  return new Hono().get(
+  return new Hono().onError(onError).get(
     "/",
     validator("query", (query, c) => {
       if (typeof query.path !== "string" || query.path === "") {
-        return API_ERROR.invalidPath(c);
+        return failureResponse(c, FAILURE.INVALID_PATH);
       }
       return { path: query.path };
     }),
@@ -35,15 +36,15 @@ export function createFileRoutes(root = env.CONTENT_ROOT) {
         const contentType = contentTypes.get(extname(path).toLowerCase());
         // Validate the real target too, so aliases cannot expose unsupported files.
         if (!contentType || !contentTypes.has(extname(file).toLowerCase())) {
-          return API_ERROR.forbidden(c);
+          return failureResponse(c, FAILURE.FORBIDDEN);
         }
-        if (!(await stat(file)).isFile()) return API_ERROR.forbidden(c);
+        if (!(await stat(file)).isFile()) return failureResponse(c, FAILURE.FORBIDDEN);
         const handle = await open(file, "r");
         try {
           const info = await handle.stat();
           if (!info.isFile()) {
             await handle.close();
-            return API_ERROR.forbidden(c);
+            return failureResponse(c, FAILURE.FORBIDDEN);
           }
           c.header("Accept-Ranges", "bytes");
           c.header("X-Content-Type-Options", "nosniff");
@@ -67,7 +68,10 @@ export function createFileRoutes(root = env.CONTENT_ROOT) {
             );
           }
           c.header("Content-Length", String(info.size));
-          return c.body(Readable.toWeb(handle.createReadStream()) as ReadableStream<Uint8Array>);
+          return c.body(
+            Readable.toWeb(handle.createReadStream()) as ReadableStream<Uint8Array>,
+            200,
+          );
         } catch (error) {
           await handle.close();
           throw error;

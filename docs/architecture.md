@@ -47,6 +47,18 @@ compose.yaml
 
 Vite のルートは `src/client` とし、加工せず配信する静的ファイルは `src/client/public`、import して使用する画像などは `src/client/assets` に置く。フロントエンドのビルド出力は `dist/client` に配置する。閲覧対象の PDF・画像・動画は `public` に置かず、サーバーから配信する。
 
+## API のエラー処理方針
+
+呼び出し元が失敗の種類に応じて処理を変える場合は、想定内の失敗として値を返す。サービス層では成功と失敗を区別できる Result を使い、失敗には識別用の code、種類、メッセージを持たせる。HTTP ステータスはサービス層に持ち込まず、ルート側で失敗の種類から応答に変換する。種類とステータスの対応は一箇所で管理する。
+
+ルートハンドラーは想定内の失敗を応答として return し、成功時もステータスを明示する。これにより Hono RPC の応答型にステータスと失敗の情報を含め、クライアントがステータスで型を絞り込めるようにする。
+
+エラー応答の形式は `{ error: { code, message } }` とし、入力検証などハンドラーの外で起きる失敗も揃える。検証フックから return した応答は RPC の型に含められるが、throw して `onError` で処理した応答はハンドラーの戻り値の型には含まれない。ルートが存在しない場合は `notFound` で扱う。
+
+想定外の例外は `onError` でログに記録し、内部情報を含めない 500 応答を返す。エラー応答の組み立ては共通化する。
+
+Range を満たせない場合は HTTP Range の仕様に従い、本文のない 416 応答を返す。
+
 ## 一覧画面のルーティングとデータ取得
 
 一覧画面は React Router の Data Mode を使う。ルートディレクトリの URL は `/`、子ディレクトリは `/?path=<URL エンコードした相対パス>` とする。クエリでパスを表すため、拡張子を含むディレクトリ名も静的ファイルの URL と区別できる。
@@ -57,7 +69,7 @@ loader は URL の `path` を読み取り、Hono RPC で一覧 API を呼ぶ。�
 
 ## ディレクトリ一覧と絞り込み
 
-`src/server/services/directoryListing.ts` の `listDirectory(path, root)` が、公開ルートからの相対パスを受け取り、既存の `resolvePublicPath` で検証してから直下の項目を読み取る。`path` の既定値は空文字列、`root` の既定値は `CONTENT_ROOT` とする。読み取りエラーは呼び出し元へ伝える。
+`src/server/services/directoryListing.ts` の `listDirectory(path, root)` が、公開ルートからの相対パスを受け取り、既存の `resolvePublicPath` で検証してから直下の項目を読み取る。`path` の既定値は空文字列、`root` の既定値は `CONTENT_ROOT` とする。`listDirectoryResult` は想定内の読み取りエラーを失敗の値に変換し、想定外のエラーは呼び出し元へ伝える。
 
 共有型 `DirectoryEntry` は `src/shared/directory.ts` に定義する。各項目は名前 `name`、公開ルート基準の相対パス `path`、種類 `kind` を持つ。パスの区切りには `/` を使い、URL エンコードは行わない。種類 `kind` は `directory` または `file` とする。`file` の場合だけ形式 `format` を必須とし、値は `pdf`・`gif`・`webm`・`png`・`jpeg` とする。`.jpg` と `.jpeg` はともに `jpeg` とする。ファイルシステム上の種類とファイル形式を分けるため、共有型は `kind` を判別子とする union で表す。リンクを含むディレクトリを指定した場合も、返すパスには指定時の相対パスを使う。
 
@@ -81,9 +93,9 @@ loader は URL の `path` を読み取り、Hono RPC で一覧 API を呼ぶ。�
 一覧の `kind === "file"` かつ `format === "pdf"` の項目から、`"/api/thumbnails?path=" + encodeURIComponent(entry.path)` で URL を組み立てる。パスは一度だけ URL デコードする。
 
 - 成功時は 200 と JPG の全バイトを返し、`Content-Type: image/jpeg`、ファイルサイズの `Content-Length`、`X-Content-Type-Options: nosniff` を設定する。
-- `path` の省略・空文字・重複、PDF 以外の拡張子は 400 `{ "error": "INVALID_PATH" }` とする。
-- JPG が存在しない場合は 404 `{ "error": "NOT_FOUND" }` とする。代替画像は返さない。
-- 絶対パス、`..`、NUL、ルート外を指すシンボリックリンク、ディレクトリ、実体の拡張子が `.jpg` 以外のリンクは 403 `{ "error": "FORBIDDEN" }` とする。読み取り権限がない場合も 403 とし、その他の読み取りエラーは 500 `{ "error": "INTERNAL_ERROR" }` とする。
+- `path` の省略・空文字・重複、PDF 以外の拡張子は 400 `{ "error": { "code": "INVALID_PATH", "message": "パスが正しくありません" } }` とする。
+- JPG が存在しない場合は 404 `{ "error": { "code": "NOT_FOUND", "message": "対象が見つかりません" } }` とする。代替画像は返さない。
+- 絶対パス、`..`、NUL、ルート外を指すシンボリックリンク、ディレクトリ、実体の拡張子が `.jpg` 以外のリンクは 403 `{ "error": { "code": "FORBIDDEN", "message": "アクセスできません" } }` とする。読み取り権限がない場合も 403 とし、その他の読み取りエラーは 500 `{ "error": { "code": "INTERNAL_ERROR", "message": "サーバーでエラーが起きました" } }` とする。
 
 ## 開発・本番の起動方針
 

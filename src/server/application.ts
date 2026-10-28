@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 import { app } from "./app.ts";
+import { notFound, onError } from "./apiErrors.ts";
 import { env } from "./env.ts";
 
 export function createServerApp(
@@ -15,6 +16,8 @@ export function createServerApp(
   const serveClient = serveStatic({ root: clientRoot, path: "index.html" });
 
   return new Hono()
+    .onError(onError)
+    .notFound(notFound)
     .route("/", app)
     .all("/api", (c) => c.notFound())
     .all("/api/*", (c) => c.notFound())

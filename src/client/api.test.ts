@@ -7,11 +7,10 @@ import type { DirectoryErrorResponse, DirectoryResponse, HelloResponse } from ".
 
 it("exposes directory errors without the successful response body", () => {
   expectTypeOf<DirectoryErrorResponse>().toEqualTypeOf<
-    | { readonly error: "INVALID_PATH" }
-    | { readonly error: "NOT_DIRECTORY" }
-    | { readonly error: "FORBIDDEN" }
-    | { readonly error: "NOT_FOUND" }
-    | { readonly error: "INTERNAL_ERROR" }
+    | { error: { code: "INVALID_PATH"; message: string } }
+    | { error: { code: "NOT_DIRECTORY"; message: string } }
+    | { error: { code: "FORBIDDEN"; message: string } }
+    | { error: { code: "NOT_FOUND"; message: string } }
   >();
 });
 
@@ -45,7 +44,7 @@ it("preserves each error body and narrows RPC responses by HTTP status", async (
   });
   const response = await client.api.directories.$get({ query: { path: ["a", "b"] } });
   expect(response.status).toBe(400);
-  expectTypeOf(response.status).toEqualTypeOf<200 | 400 | 403 | 404 | 500>();
+  expectTypeOf(response.status).toEqualTypeOf<200 | 400 | 403 | 404>();
 
   switch (response.status) {
     case 200: {
@@ -56,19 +55,21 @@ it("preserves each error body and narrows RPC responses by HTTP status", async (
     case 400: {
       const body = await response.json();
       expectTypeOf(body).toEqualTypeOf<
-        { readonly error: "INVALID_PATH" } | { readonly error: "NOT_DIRECTORY" }
+        | { error: { code: "INVALID_PATH"; message: string } }
+        | { error: { code: "NOT_DIRECTORY"; message: string } }
       >();
-      expect(body).toEqual({ error: "INVALID_PATH" });
+      expect(body).toMatchObject({ error: { code: "INVALID_PATH", message: expect.any(String) } });
       break;
     }
     case 403:
-      expectTypeOf(await response.json()).toEqualTypeOf<{ readonly error: "FORBIDDEN" }>();
+      expectTypeOf(await response.json()).toEqualTypeOf<{
+        error: { code: "FORBIDDEN"; message: string };
+      }>();
       break;
     case 404:
-      expectTypeOf(await response.json()).toEqualTypeOf<{ readonly error: "NOT_FOUND" }>();
-      break;
-    case 500:
-      expectTypeOf(await response.json()).toEqualTypeOf<{ readonly error: "INTERNAL_ERROR" }>();
+      expectTypeOf(await response.json()).toEqualTypeOf<{
+        error: { code: "NOT_FOUND"; message: string };
+      }>();
       break;
     default:
       expectTypeOf(response).toEqualTypeOf<never>();

@@ -56,13 +56,17 @@ it.each([
 ] as const)("rejects %s", async (path, status, error) => {
   const response = await request(`?path=${encodeURIComponent(path)}`);
   expect(response.status).toBe(status);
-  expect(await response.json()).toEqual({ error });
+  expect(await response.json()).toMatchObject({
+    error: { code: error, message: expect.any(String) },
+  });
 });
 
 it.each(["", "?path=", "?path=a.pdf&path=b.pdf"])("rejects invalid queries: %s", async (query) => {
   const response = await request(query);
   expect(response.status).toBe(400);
-  expect(await response.json()).toEqual({ error: "INVALID_PATH" });
+  expect(await response.json()).toMatchObject({
+    error: { code: "INVALID_PATH", message: expect.any(String) },
+  });
 });
 
 it("rejects outside symlinks and aliases to unsupported files", async () => {
@@ -71,7 +75,9 @@ it("rejects outside symlinks and aliases to unsupported files", async () => {
   for (const path of ["outside/secret.pdf", "alias.pdf"]) {
     const response = await request(`?path=${encodeURIComponent(path)}`);
     expect(response.status).toBe(403);
-    expect(await response.json()).toEqual({ error: "FORBIDDEN" });
+    expect(await response.json()).toMatchObject({
+      error: { code: "FORBIDDEN", message: expect.any(String) },
+    });
   }
 });
 
