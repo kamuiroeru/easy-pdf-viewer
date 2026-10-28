@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { ApplyGlobalResponse } from "hono/client";
 import { notFound, onError } from "@be/apiErrors.ts";
 import { createDirectoryRoutes } from "@be/routes/directories.ts";
 import { createFileRoutes } from "@be/routes/files.ts";
@@ -14,4 +15,7 @@ export const app = new Hono()
     return c.json({ message: "Hello from Hono!" }, 200);
   });
 
-export type AppType = typeof app;
+export type AppType = ApplyGlobalResponse<
+  typeof app,
+  { 500: { json: { error: { code: "INTERNAL_ERROR"; message: string } } } }
+>;
