@@ -1,9 +1,13 @@
 import { FileImage, FileVideo } from "lucide-react";
 import { useState } from "react";
 import { FILE_FORMAT, type DirectoryEntry } from "@s/directory";
+import { MediaViewer } from "./MediaViewer";
 
-function FileCard(props: { entry: Extract<DirectoryEntry, { kind: "file" }> }) {
-  const { entry } = props;
+function FileCard(props: {
+  entry: Extract<DirectoryEntry, { kind: "file" }>;
+  onOpen: (entry: Extract<DirectoryEntry, { kind: "file" }>) => void;
+}) {
+  const { entry, onOpen } = props;
   const [imageFailed, setImageFailed] = useState(false);
   const fileUrl = `/api/files?path=${encodeURIComponent(entry.path)}`;
   const imageUrl =
@@ -49,12 +53,19 @@ function FileCard(props: { entry: Extract<DirectoryEntry, { kind: "file" }> }) {
       {content}
     </a>
   ) : (
-    <div className="flex h-full items-center gap-4 rounded-xl bg-[#20382a] p-4">{content}</div>
+    <button
+      className="flex h-full w-full items-center gap-4 rounded-xl bg-[#20382a] p-4 text-left hover:bg-[#294735] focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-[#c3f5a0]"
+      aria-label={entry.name}
+      onClick={() => onOpen(entry)}
+    >
+      {content}
+    </button>
   );
 }
 
 export function FileList(props: { files: DirectoryEntry[]; hasQuery: boolean }) {
   const { files, hasQuery } = props;
+  const [selected, setSelected] = useState<Extract<DirectoryEntry, { kind: "file" }> | null>(null);
 
   return (
     <section className="mt-8" aria-labelledby="files-heading">
@@ -74,12 +85,13 @@ export function FileList(props: { files: DirectoryEntry[]; hasQuery: boolean }) 
             (entry) =>
               entry.kind === "file" && (
                 <li className="min-w-0" key={entry.path}>
-                  <FileCard entry={entry} />
+                  <FileCard entry={entry} onOpen={setSelected} />
                 </li>
               ),
           )}
         </ul>
       )}
+      {selected && <MediaViewer entry={selected} onClose={() => setSelected(null)} />}
     </section>
   );
 }

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { expect, it } from "vite-plus/test";
+import { beforeEach, expect, it } from "vite-plus/test";
 import { FileList } from "./FileList";
 
 it("shows the file count and names", () => {
@@ -73,4 +73,48 @@ it("loads images from the file API without requesting WebM videos", () => {
   expect(images[0]?.getAttribute("loading")).toBe("lazy");
   expect(document.querySelector("video")).toBeNull();
   expect(document.querySelector('[src*="%E5%8B%95%E7%94%BB.webm"]')).toBeNull();
+});
+
+beforeEach(() => {
+  HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement): void {
+    this.setAttribute("open", "");
+  };
+  HTMLDialogElement.prototype.close = function (this: HTMLDialogElement): void {
+    this.removeAttribute("open");
+    fireEvent(this, new Event("close"));
+  };
+});
+
+it.each(["gif", "png", "jpeg"] as const)("opens and closes a %s image", (format) => {
+  render(
+    <FileList
+      files={[{ kind: "file", name: `画像.${format}`, path: `資料/画像.${format}`, format }]}
+      hasQuery={false}
+    />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: `画像.${format}` }));
+  const dialog = screen.getByRole("dialog", { name: `画像.${format}` });
+  expect(dialog.querySelector("img")?.getAttribute("src")).toBe(
+    `/api/files?path=${encodeURIComponent(`資料/画像.${format}`)}`,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "閉じる" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(screen.getByRole("button", { name: `画像.${format}` })).toBeTruthy();
+});
+
+it("loads a video only while its viewer is open and closes on the dialog close event", () => {
+  render(
+    <FileList
+      files={[{ kind: "file", name: "動画.webm", path: "動画.webm", format: "webm" }]}
+      hasQuery={false}
+    />,
+  );
+  expect(document.querySelector("video")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "動画.webm" }));
+  const dialog = screen.getByRole("dialog");
+  const video = dialog.querySelector("video");
+  expect(video?.getAttribute("src")).toBe(`/api/files?path=${encodeURIComponent("動画.webm")}`);
+  expect(video?.controls).toBe(true);
+  fireEvent(dialog, new Event("close"));
+  expect(document.querySelector("video")).toBeNull();
 });
