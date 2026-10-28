@@ -1,9 +1,14 @@
+# lefthook の疑似端末で vp が入力待ちになるため、標準入力を閉じる。
+# https://github.com/voidzero-dev/vite-plus/issues/1396
 pre-commit:
   commands:
     check:
-      run: vp check --fix {staged_files}
+      run: vp check --fix {staged_files} </dev/null
       stage_fixed: true
 pre-push:
+  parallel: true
   commands:
     knip:
-      run: vp run knip
+      run: vp run knip </dev/null
+    test:
+      run: vp test </dev/null
