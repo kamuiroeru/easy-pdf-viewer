@@ -38,6 +38,7 @@ it("links PDFs to the file API and loads their thumbnails", () => {
   expect(link.querySelector("img")?.getAttribute("src")).toBe(
     `/api/thumbnails?path=${encodeURIComponent("資料/長い 日本語.PDF")}`,
   );
+  expect(link.querySelector("img")?.getAttribute("loading")).toBe("lazy");
 });
 
 it("preserves the PDF link and name when the thumbnail fails", () => {
@@ -69,5 +70,7 @@ it("loads images from the file API without requesting WebM videos", () => {
   const images = document.querySelectorAll("img");
   expect(images).toHaveLength(1);
   expect(images[0]?.getAttribute("src")).toBe(`/api/files?path=${encodeURIComponent("画像.png")}`);
+  expect(images[0]?.getAttribute("loading")).toBe("lazy");
   expect(document.querySelector("video")).toBeNull();
+  expect(document.querySelector('[src*="%E5%8B%95%E7%94%BB.webm"]')).toBeNull();
 });
