@@ -1,27 +1,22 @@
-const FAILURE_KIND = {
-  INVALID: "invalid",
-  FORBIDDEN: "forbidden",
-  NOT_FOUND: "notFound",
-} as const;
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 
-export type FailureKind = (typeof FAILURE_KIND)[keyof typeof FAILURE_KIND];
 export type Failure = {
   readonly code: string;
-  readonly kind: FailureKind;
+  readonly status: ContentfulStatusCode;
   readonly message: string;
 };
 
 export const FAILURE = {
   INVALID_PATH: {
     code: "INVALID_PATH",
-    kind: FAILURE_KIND.INVALID,
+    status: 400,
     message: "パスが正しくありません",
   },
   NOT_DIRECTORY: {
     code: "NOT_DIRECTORY",
-    kind: FAILURE_KIND.INVALID,
+    status: 400,
     message: "ディレクトリではありません",
   },
-  FORBIDDEN: { code: "FORBIDDEN", kind: FAILURE_KIND.FORBIDDEN, message: "アクセスできません" },
-  NOT_FOUND: { code: "NOT_FOUND", kind: FAILURE_KIND.NOT_FOUND, message: "対象が見つかりません" },
+  FORBIDDEN: { code: "FORBIDDEN", status: 403, message: "アクセスできません" },
+  NOT_FOUND: { code: "NOT_FOUND", status: 404, message: "対象が見つかりません" },
 } as const satisfies Record<string, Failure>;
