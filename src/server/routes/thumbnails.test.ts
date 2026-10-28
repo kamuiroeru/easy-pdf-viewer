@@ -41,7 +41,9 @@ it.each(["", "?path=", "?path=a.jpg", "?path=a.pdf&path=b.pdf"])(
   async (query) => {
     const response = await request(query);
     expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ error: "INVALID_PATH" });
+    expect(await response.json()).toMatchObject({
+      error: { code: "INVALID_PATH", message: expect.any(String) },
+    });
   },
 );
 
@@ -50,14 +52,18 @@ it.each(["../outside.pdf", "..\\outside.pdf", "/absolute.pdf", "bad\0path.pdf"])
   async (path) => {
     const response = await request(`?path=${encodeURIComponent(path)}`);
     expect(response.status).toBe(403);
-    expect(await response.json()).toEqual({ error: "FORBIDDEN" });
+    expect(await response.json()).toMatchObject({
+      error: { code: "FORBIDDEN", message: expect.any(String) },
+    });
   },
 );
 
 it("returns 404 for a missing JPG", async () => {
   const response = await request("?path=missing.pdf");
   expect(response.status).toBe(404);
-  expect(await response.json()).toEqual({ error: "NOT_FOUND" });
+  expect(await response.json()).toMatchObject({
+    error: { code: "NOT_FOUND", message: expect.any(String) },
+  });
 });
 
 it("rejects outside links, unsupported targets and directories", async () => {
@@ -68,7 +74,9 @@ it("rejects outside links, unsupported targets and directories", async () => {
   for (const path of ["outside/missing.pdf", "alias.pdf", "directory.pdf"]) {
     const response = await request(`?path=${encodeURIComponent(path)}`);
     expect(response.status).toBe(403);
-    expect(await response.json()).toEqual({ error: "FORBIDDEN" });
+    expect(await response.json()).toMatchObject({
+      error: { code: "FORBIDDEN", message: expect.any(String) },
+    });
   }
 });
 

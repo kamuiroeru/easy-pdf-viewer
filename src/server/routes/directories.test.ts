@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Hono } from "hono";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
+import { onError } from "@be/apiErrors.ts";
 import { createDirectoryRoutes } from "./directories.ts";
 
 let root: string;
@@ -20,6 +21,7 @@ afterEach(async () => {
 
 function request(query = "") {
   return new Hono()
+    .onError(onError)
     .route("/api/directories", createDirectoryRoutes(root))
     .request(`/api/directories${query}`);
 }
@@ -56,26 +58,34 @@ it.each([
 ] as const)("handles %s without exposing filesystem paths", async (path, status, error) => {
   const response = await request(`?path=${encodeURIComponent(path)}`);
   expect(response.status).toBe(status);
-  expect(await response.json()).toEqual({ error });
+  expect(await response.json()).toMatchObject({
+    error: { code: error, message: expect.any(String) },
+  });
 });
 
 it("rejects repeated path parameters", async () => {
   const response = await request("?path=first&path=second");
   expect(response.status).toBe(400);
-  expect(await response.json()).toEqual({ error: "INVALID_PATH" });
+  expect(await response.json()).toMatchObject({
+    error: { code: "INVALID_PATH", message: expect.any(String) },
+  });
 });
 
 it("rejects links outside the content root", async () => {
   await symlink(tmpdir(), join(root, "outside"));
   const response = await request("?path=outside");
   expect(response.status).toBe(403);
-  expect(await response.json()).toEqual({ error: "FORBIDDEN" });
+  expect(await response.json()).toMatchObject({
+    error: { code: "FORBIDDEN", message: expect.any(String) },
+  });
 });
 
 it("hides unexpected filesystem errors", async () => {
   const service = await import("@be/services/directoryListing.ts");
-  vi.spyOn(service, "listDirectory").mockRejectedValue(new Error(`failure at ${root}`));
+  vi.spyOn(service, "listDirectoryResult").mockRejectedValue(new Error(`failure at ${root}`));
   const response = await request();
   expect(response.status).toBe(500);
-  expect(await response.json()).toEqual({ error: "INTERNAL_ERROR" });
+  expect(await response.json()).toMatchObject({
+    error: { code: "INTERNAL_ERROR", message: expect.any(String) },
+  });
 });

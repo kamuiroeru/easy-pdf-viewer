@@ -4,13 +4,17 @@ import { app } from "./app.ts";
 it("registers the thumbnail delivery API", async () => {
   const response = await app.request("/api/thumbnails");
   expect(response.status).toBe(400);
-  expect(await response.json()).toEqual({ error: "INVALID_PATH" });
+  expect(await response.json()).toMatchObject({
+    error: { code: "INVALID_PATH", message: expect.any(String) },
+  });
 });
 
 it("registers the file delivery API", async () => {
   const response = await app.request("/api/files");
   expect(response.status).toBe(400);
-  expect(await response.json()).toEqual({ error: "INVALID_PATH" });
+  expect(await response.json()).toMatchObject({
+    error: { code: "INVALID_PATH", message: expect.any(String) },
+  });
 });
 
 describe("GET /api/hello", () => {
@@ -26,5 +30,8 @@ describe("GET /api/hello", () => {
     const response = await app.request("/api/unknown");
 
     expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({
+      error: { code: "ROUTE_NOT_FOUND", message: "ルートが見つかりません" },
+    });
   });
 });

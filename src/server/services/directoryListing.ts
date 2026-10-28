@@ -1,6 +1,7 @@
 import { readdir } from "node:fs/promises";
 import { extname, posix } from "node:path";
 import { env } from "@be/env.ts";
+import { pathFailure, type PathFailure } from "./pathFailures.ts";
 import { resolvePublicPath } from "./publicPaths.ts";
 import { FILE_FORMAT, type DirectoryEntry, type FileFormat } from "@s/directory.ts";
 
@@ -31,4 +32,15 @@ export async function listDirectory(path = "", root = env.CONTENT_ROOT): Promise
     }
     return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
   });
+}
+
+export async function listDirectoryResult(
+  path = "",
+  root = env.CONTENT_ROOT,
+): Promise<{ ok: true; value: DirectoryEntry[] } | { ok: false; error: PathFailure }> {
+  try {
+    return { ok: true, value: await listDirectory(path, root) };
+  } catch (error) {
+    return { ok: false, error: pathFailure(error, "directory") };
+  }
 }

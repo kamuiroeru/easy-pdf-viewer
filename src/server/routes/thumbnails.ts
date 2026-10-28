@@ -1,20 +1,21 @@
+import { FAILURE } from "@be/services/failures.ts";
 import { open, stat } from "node:fs/promises";
 import { extname } from "node:path";
 import { Readable } from "node:stream";
 import { Hono } from "hono";
 import { validator } from "hono/validator";
-import { API_ERROR } from "@be/apiErrors.ts";
+import { failureResponse, onError } from "@be/apiErrors.ts";
 import { env } from "@be/env.ts";
 import { resolvePublicPath } from "@be/services/publicPaths.ts";
 import { pathErrorResponse } from "./pathErrors.ts";
 
 /** GET /?path=<URL-encoded relative PDF path>. */
 export function createThumbnailRoutes(root = env.THUMBNAIL_ROOT) {
-  return new Hono().get(
+  return new Hono().onError(onError).get(
     "/",
     validator("query", (query, c) => {
       if (typeof query.path !== "string" || !/\.pdf$/i.test(query.path)) {
-        return API_ERROR.invalidPath(c);
+        return failureResponse(c, FAILURE.INVALID_PATH);
       }
       return { path: query.path };
     }),
@@ -23,19 +24,22 @@ export function createThumbnailRoutes(root = env.THUMBNAIL_ROOT) {
         const path = c.req.valid("query").path.replace(/\.pdf$/i, ".jpg");
         const file = await resolvePublicPath(root, path);
         if (extname(file).toLowerCase() !== ".jpg" || !(await stat(file)).isFile()) {
-          return API_ERROR.forbidden(c);
+          return failureResponse(c, FAILURE.FORBIDDEN);
         }
         const handle = await open(file, "r");
         try {
           const info = await handle.stat();
           if (!info.isFile()) {
             await handle.close();
-            return API_ERROR.forbidden(c);
+            return failureResponse(c, FAILURE.FORBIDDEN);
           }
           c.header("Content-Type", "image/jpeg");
           c.header("Content-Length", String(info.size));
           c.header("X-Content-Type-Options", "nosniff");
-          return c.body(Readable.toWeb(handle.createReadStream()) as ReadableStream<Uint8Array>);
+          return c.body(
+            Readable.toWeb(handle.createReadStream()) as ReadableStream<Uint8Array>,
+            200,
+          );
         } catch (error) {
           await handle.close();
           throw error;
