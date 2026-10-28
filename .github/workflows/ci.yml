@@ -10,6 +10,10 @@ on:
     paths-ignore:
       - "docs/**"
 
+concurrency:
+  group: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 'ci-main' || github.run_id }}
+  queue: max
+
 permissions:
   contents: read
 
