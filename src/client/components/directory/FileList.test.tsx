@@ -118,3 +118,33 @@ it("loads a video only while its viewer is open and closes on the dialog close e
   fireEvent(dialog, new Event("close"));
   expect(document.querySelector("video")).toBeNull();
 });
+
+it("navigates media in list order, skipping PDFs and stopping at both ends", () => {
+  render(
+    <FileList
+      files={[
+        { kind: "file", name: "a.png", path: "a.png", format: "png" },
+        { kind: "file", name: "b.pdf", path: "b.pdf", format: "pdf" },
+        { kind: "file", name: "c.webm", path: "c.webm", format: "webm" },
+        { kind: "file", name: "d.webm", path: "d.webm", format: "webm" },
+        { kind: "file", name: "e.gif", path: "e.gif", format: "gif" },
+      ]}
+      hasQuery={false}
+    />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "a.png" }));
+  const previous = screen.getByRole("button", { name: "前のメディア" }) as HTMLButtonElement;
+  const next = screen.getByRole("button", { name: "次のメディア" }) as HTMLButtonElement;
+  expect(previous.disabled).toBe(true);
+  fireEvent.click(next);
+  expect(screen.getByRole("dialog", { name: "c.webm" })).toBeTruthy();
+  const video = document.querySelector("video");
+  fireEvent.click(next);
+  expect(video?.isConnected).toBe(false);
+  expect(document.querySelector("video")?.getAttribute("src")).toContain("d.webm");
+  fireEvent.click(next);
+  expect(screen.getByRole("dialog", { name: "e.gif" })).toBeTruthy();
+  expect(next.disabled).toBe(true);
+  fireEvent.click(previous);
+  expect(screen.getByRole("dialog", { name: "d.webm" })).toBeTruthy();
+});
