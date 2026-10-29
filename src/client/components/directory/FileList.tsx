@@ -66,6 +66,10 @@ function FileCard(props: {
 export function FileList(props: { files: DirectoryEntry[]; hasQuery: boolean }) {
   const { files, hasQuery } = props;
   const [selected, setSelected] = useState<Extract<DirectoryEntry, { kind: "file" }> | null>(null);
+  const media = files.filter((entry) => entry.kind === "file" && entry.format !== FILE_FORMAT.PDF);
+  const selectedIndex = media.findIndex((entry) => entry.path === selected?.path);
+  const previous = selectedIndex > 0 ? media[selectedIndex - 1] : undefined;
+  const next = selectedIndex >= 0 ? media[selectedIndex + 1] : undefined;
 
   return (
     <section className="mt-8" aria-labelledby="files-heading">
@@ -91,7 +95,14 @@ export function FileList(props: { files: DirectoryEntry[]; hasQuery: boolean }) 
           )}
         </ul>
       )}
-      {selected && <MediaViewer entry={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <MediaViewer
+          entry={selected}
+          onClose={() => setSelected(null)}
+          onPrevious={previous?.kind === "file" ? () => setSelected(previous) : undefined}
+          onNext={next?.kind === "file" ? () => setSelected(next) : undefined}
+        />
+      )}
     </section>
   );
 }

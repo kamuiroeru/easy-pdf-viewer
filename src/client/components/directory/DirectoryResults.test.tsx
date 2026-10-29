@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vite-plus/test";
 import type { DirectoryEntry } from "@s/directory";
@@ -20,6 +20,24 @@ function results(query: string, items = entries) {
 }
 
 describe("DirectoryResults", () => {
+  it("navigates only among matching media", () => {
+    HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement): void {
+      this.setAttribute("open", "");
+    };
+    render(
+      results("match", [
+        { kind: "file", name: "match-a.jpeg", path: "match-a.jpeg", format: "jpeg" },
+        { kind: "file", name: "other.png", path: "other.png", format: "png" },
+        { kind: "file", name: "match-b.gif", path: "match-b.gif", format: "gif" },
+      ]),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "match-a.jpeg" }));
+    fireEvent.click(screen.getByRole("button", { name: "次のメディア" }));
+    expect(screen.getByRole("dialog", { name: "match-b.gif" })).toBeTruthy();
+    expect(
+      (screen.getByRole("button", { name: "次のメディア" }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+  });
   it("groups entries and filters names case-insensitively, then restores them when cleared", () => {
     const { rerender } = render(results("bOoK"));
     expect(screen.getByRole("region", { name: "Directories 1" }).textContent).toContain(
